@@ -1,0 +1,27 @@
+---
+import Janela from '../components/Janela.astro'
+import Base from '../layouts/Base.astro'
+---
+
+<Base titulo="Página não encontrada" descricao="Este endereço não existe no caderno de estudos do Zeno.">
+  <div class="mx-auto max-w-2xl pt-16 md:pt-24">
+    <Janela titulo="zeno@blog: ~">
+      <div class="p-6 font-mono text-sm leading-relaxed md:p-8">
+        <p><span class="text-azul-claro">$</span> <span class="text-titulo">cat</span> <span id="caminho" class="text-texto">esta-pagina</span></p>
+        <p class="text-vermelho-claro">cat: arquivo ou diretório não encontrado</p>
+        <h1 class="titulo-marca mt-8 font-sans text-6xl">404<span class="sr-only"> — página não encontrada</span></h1>
+        <p class="mt-4 font-sans text-base text-texto">
+          Esse endereço não existe — ou o post mudou de nome. A busca costuma achar.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3 font-sans">
+          <a href="/busca/" class="rounded-full bg-azul px-5 py-2 text-sm font-medium text-white hover:bg-[#3d8dfa]">Buscar</a>
+          <a href="/posts/" class="rounded-full border border-white/15 px-5 py-2 text-sm text-titulo hover:border-azul-claro/50">Ver os posts</a>
+          <a href="/" class="rounded-full border border-white/15 px-5 py-2 text-sm text-titulo hover:border-azul-claro/50">Início</a>
+        </div>
+      </div>
+    </Janela>
+  </div>
+  <script is:inline>
+    document.getElementById('caminho').textContent = decodeURIComponent(location.pathname)
+  </script>
+</Base>

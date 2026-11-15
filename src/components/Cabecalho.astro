@@ -1,0 +1,17 @@
+---
+/** Cabeçalho das páginas internas: o "comando" em mono, o título grande
+ *  e uma linha de descrição. */
+interface Props {
+  comando: string
+  titulo: string
+  descricao?: string
+}
+const { comando, titulo, descricao } = Astro.props
+---
+
+<header class="pb-10 pt-12 md:pb-14 md:pt-20">
+  <p class="entrada font-mono text-sm text-azul-claro"><span class="text-suave">$</span> {comando}</p>
+  <h1 class="entrada titulo-marca mt-4 text-[2.6rem] md:text-6xl" style="--i: 1">{titulo}</h1>
+  {descricao && <p class="entrada mt-5 max-w-2xl text-lg leading-relaxed text-texto" style="--i: 2">{descricao}</p>}
+  <slot />
+</header>

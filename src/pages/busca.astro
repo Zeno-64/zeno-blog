@@ -1,0 +1,31 @@
+---
+import Cabecalho from '../components/Cabecalho.astro'
+import Base from '../layouts/Base.astro'
+---
+
+<Base titulo="Busca" descricao="Busque nos posts do caderno de estudos do Zeno.">
+  <link slot="head" href="/pagefind/pagefind-ui.css" rel="stylesheet" />
+  <Cabecalho comando="grep -ri" titulo="Busca" descricao="Procure por assunto, ferramenta ou aquele erro que você lembra de ter lido aqui." />
+
+  <div id="busca" class="max-w-3xl"></div>
+  <p id="busca-aviso" hidden class="max-w-2xl rounded-2xl border border-ambar/30 bg-ambar/[0.06] px-5 py-4 text-sm text-texto">
+    O índice de busca é gerado no build. Rodando <code class="font-mono text-gelo-claro">npm run dev</code> ele não
+    existe — use <code class="font-mono text-gelo-claro">npm run build && npm run preview</code> para testar.
+  </p>
+
+  <script is:inline src="/pagefind/pagefind-ui.js"></script>
+  <script is:inline>
+    if (window.PagefindUI) {
+      const busca = new window.PagefindUI({
+        element: '#busca',
+        showSubResults: true,
+        showImages: false,
+        autofocus: true,
+      })
+      const termo = new URLSearchParams(location.search).get('q')
+      if (termo) busca.triggerSearch(termo)
+    } else {
+      document.getElementById('busca-aviso').hidden = false
+    }
+  </script>
+</Base>

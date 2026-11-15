@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content'
+
+/** Progresso de uma trilha: feito (azul cheio), estudando (listrado) e
+ *  próximo (vazio). O texto ao lado repete os números para leitor de tela. */
+interface Props {
+  trilha: CollectionEntry<'trilhas'>
+}
+const { etapas } = Astro.props.trilha.data
+const total = etapas.length
+const feito = etapas.filter((e) => e.status === 'feito').length
+const estudando = etapas.filter((e) => e.status === 'estudando').length
+const pct = (n: number) => (total ? (n / total) * 100 : 0)
+---
+
+<div class="flex items-center gap-3">
+  <div class="flex h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]" aria-hidden="true">
+    <span class="h-full bg-gradient-to-r from-azul to-azul-claro" style={`width: ${pct(feito)}%`}></span>
+    <span
+      class="h-full bg-[repeating-linear-gradient(135deg,rgba(159,216,255,0.55)_0_4px,rgba(159,216,255,0.15)_4px_8px)]"
+      style={`width: ${pct(estudando)}%`}
+    ></span>
+  </div>
+  <span class="shrink-0 font-mono text-[0.7rem] text-suave">
+    {feito}/{total} feitas{estudando > 0 && `, ${estudando} em estudo`}
+  </span>
+</div>

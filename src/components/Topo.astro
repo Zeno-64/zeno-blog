@@ -1,0 +1,77 @@
+---
+import { navegacao } from '../lib/site'
+
+const caminho = Astro.url.pathname
+const ativa = (rota: string) => caminho === rota || caminho.startsWith(rota)
+// página de post conta como "Posts" no menu (TIL também é post)
+const rotaAtiva = caminho.startsWith('/posts/') ? '/posts/' : navegacao.find((n) => ativa(n.rota))?.rota
+---
+
+<header class="sticky top-0 z-50 border-b border-white/[0.06] bg-fundo/80 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 px-4 md:h-16 md:flex-nowrap md:px-6">
+    <a href="/" class="flex h-14 shrink-0 items-center gap-2.5 md:h-auto" aria-label="Zeno, caderno de estudos — início">
+      <span class="moldura-luz luz-vermelha rounded-[11px] !p-px" style="--giro: 4s">
+        <img
+          src="/perfil.webp"
+          alt=""
+          width="32"
+          height="32"
+          class="block size-8 rounded-[10px] border-2 border-fundo object-cover"
+        />
+      </span>
+      <span class="font-marca text-xl font-bold italic tracking-[-0.02em] text-titulo">Zeno</span>
+      <span class="rounded border border-azul/30 bg-azul/10 px-1.5 py-px font-mono text-[0.6rem] text-azul-claro">
+        .blog
+      </span>
+    </a>
+
+    <div class="ml-auto flex items-center gap-2 md:order-last md:ml-3">
+      <a
+        href="/busca/"
+        class="grid size-9 place-items-center rounded-full border border-white/10 text-suave transition hover:border-azul-claro/40 hover:text-titulo"
+        aria-label="Buscar (atalho: barra /)"
+        title="Buscar — atalho /"
+      >
+        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5" stroke-linecap="round"></path>
+        </svg>
+      </a>
+      <a
+        href="/rss.xml"
+        class="grid size-9 place-items-center rounded-full border border-white/10 text-suave transition hover:border-ambar/50 hover:text-ambar"
+        aria-label="Assinar pelo RSS"
+        title="RSS"
+      >
+        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14" stroke-linecap="round"></path>
+          <circle cx="6" cy="18" r="1.4" fill="currentColor" stroke="none"></circle>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Um menu só: no celular vira uma linha que rola para o lado -->
+    <nav aria-label="Principal" class="order-last -mx-4 w-[calc(100%+2rem)] border-t border-white/[0.05] md:order-none md:mx-0 md:ml-auto md:w-auto md:border-0">
+      <ul class="flex gap-1 overflow-x-auto py-2 pl-3 pr-12 [mask-image:linear-gradient(to_right,#000_82%,transparent)] [scrollbar-width:none] md:overflow-visible md:p-0 md:[mask-image:none]">
+        {
+          navegacao.map((item) => (
+            <li class="shrink-0">
+              <a
+                href={item.rota}
+                aria-current={rotaAtiva === item.rota ? 'page' : undefined}
+                class:list={[
+                  'block rounded-full px-3 py-1.5 text-sm transition-colors duration-200',
+                  rotaAtiva === item.rota
+                    ? 'bg-azul/[0.12] text-titulo ring-1 ring-azul/30'
+                    : 'text-suave hover:text-titulo',
+                ]}
+              >
+                {item.rotulo}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>

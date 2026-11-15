@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content'
+import Cabecalho from '../components/Cabecalho.astro'
+import Base from '../layouts/Base.astro'
+import { COR_TIPO, ROTULO_TIPO } from '../lib/posts'
+
+const ideias = await getCollection('ideias')
+const trilhas = new Map((await getCollection('trilhas')).map((t) => [t.id, t.data.nome]))
+const GRUPOS = [
+  { prioridade: 'alta', titulo: 'Próximos' },
+  { prioridade: 'media', titulo: 'Depois' },
+  { prioridade: 'baixa', titulo: 'Algum dia' },
+] as const
+---
+
+<Base titulo="Na fila" descricao="Os assuntos que ainda vão virar post no caderno de estudos do Zeno.">
+  <Cabecalho
+    comando="cat ~/estudos/na-fila.md"
+    titulo="Na fila"
+    descricao="Ideias que ainda vão virar post. Fica público de propósito: é compromisso comigo mesmo e um aviso do que vem por aí."
+  />
+
+  <div class="grid gap-10 lg:grid-cols-3">
+    {
+      GRUPOS.map((g) => {
+        const lista = ideias.filter((i) => i.data.prioridade === g.prioridade)
+        return (
+          <section aria-labelledby={`fila-${g.prioridade}`}>
+            <h2 id={`fila-${g.prioridade}`} class="titulo-marca border-b border-white/[0.07] pb-2 text-2xl">
+              {g.titulo} <span class="font-mono text-sm font-normal not-italic text-fraco">{lista.length}</span>
+            </h2>
+            <ul class="mt-4 space-y-3">
+              {lista.map((i) => (
+                <li class="rounded-xl border border-white/[0.06] bg-vidro/40 px-4 py-3.5">
+                  <span class:list={['selo', COR_TIPO[i.data.tipo]]}>{ROTULO_TIPO[i.data.tipo]}</span>
+                  <p class="mt-2 font-medium leading-snug text-titulo">{i.data.titulo}</p>
+                  {i.data.notas && <p class="mt-1.5 text-sm leading-relaxed text-suave">{i.data.notas}</p>}
+                  {i.data.trilha && (
+                    <a href={`/trilhas/${i.data.trilha.id}/`} class="mt-2 inline-block font-mono text-[0.7rem] text-azul-claro hover:underline">
+                      trilha: {trilhas.get(i.data.trilha.id)}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })
+    }
+  </div>
+</Base>

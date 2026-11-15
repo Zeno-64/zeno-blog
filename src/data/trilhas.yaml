@@ -1,0 +1,103 @@
+# Trilhas de estudo — o mapa de cada assunto.
+#
+# status de cada etapa: feito | estudando | proximo
+# "ordem" decide a posição nas listas (menor primeiro).
+# Ponto de partida montado a partir dos seus projetos: ajuste à vontade.
+
+- id: web
+  nome: Front-end para negócios pequenos
+  descricao: Sites rápidos, bonitos no celular e fáceis de manter — sem mensalidade de hospedagem.
+  objetivo: Um processo repetível do primeiro contato ao site no ar, com qualidade de produto.
+  ordem: 1
+  etapas:
+    - titulo: React, Vite e Tailwind
+      status: feito
+      nota: A base dos sites de clientes e do zeno.dev.br.
+    - titulo: Animação com Framer Motion
+      status: feito
+    - titulo: Deploy no Cloudflare com domínio .com.br
+      status: feito
+      nota: Roteiro completo no primeiro post da série "Do zero ao ar".
+    - titulo: Prévia de link e SEO de SPA
+      status: feito
+    - titulo: Astro para sites de conteúdo
+      status: estudando
+      nota: Este blog é o laboratório.
+    - titulo: Acessibilidade de verdade — leitor de tela, teclado e contraste
+      status: proximo
+    - titulo: SEO local — Perfil da Empresa no Google e Search Console
+      status: proximo
+
+- id: mobile
+  nome: Apps com React Native
+  descricao: Do Expo ao app nas lojas, com dados que funcionam sem internet.
+  objetivo: Publicar os dois apps em andamento — o da nutricionista e o de receitas da casa.
+  ordem: 2
+  etapas:
+    - titulo: Expo e Expo Router
+      status: estudando
+      nota: A base dos dois apps em andamento.
+    - titulo: SQLite no aparelho, offline primeiro
+      status: estudando
+      nota: O app de receitas grava tudo no aparelho e funciona sem conta.
+    - titulo: Sincronização própria com Supabase
+      status: proximo
+    - titulo: Login, papéis e Row Level Security
+      status: proximo
+    - titulo: Build com EAS e publicação nas lojas
+      status: proximo
+
+- id: aws
+  nome: AWS na prática
+  descricao: Da certificação ao uso do dia a dia no backend, com custo sob controle.
+  objetivo: Voltar a ter certificação válida e dominar os serviços que aparecem no trabalho.
+  ordem: 3
+  etapas:
+    - titulo: Cloud Practitioner
+      status: feito
+      nota: Fevereiro de 2022.
+    - titulo: Developer – Associate
+      status: feito
+      nota: Março de 2022.
+    - titulo: Conferir a validade e o que mudou desde 2022
+      status: proximo
+      nota: Certificação AWS vale três anos.
+    - titulo: Solutions Architect – Associate
+      status: proximo
+    - titulo: Serverless — Lambda, API Gateway e DynamoDB
+      status: proximo
+    - titulo: Custos, orçamento e alertas de cobrança
+      status: proximo
+
+- id: java-spring
+  nome: Java e Spring a fundo
+  descricao: O que está por baixo do Spring Boot que uso todo dia.
+  objetivo: Entender o framework além do "funciona", para depurar e otimizar com segurança.
+  ordem: 4
+  etapas:
+    - titulo: Spring Boot no dia a dia
+      status: feito
+      nota: APIs, integrações e serviços em produção.
+    - titulo: Testes de integração com Testcontainers
+      status: proximo
+    - titulo: Observabilidade — logs, métricas e tracing
+      status: proximo
+    - titulo: Java 21 — records, pattern matching e virtual threads
+      status: proximo
+    - titulo: JPA sem surpresa — N+1, transações e locks
+      status: proximo
+
+- id: fundamentos
+  nome: Fundamentos que não envelhecem
+  descricao: Dados, sistemas distribuídos e arquitetura — o que vale em qualquer stack.
+  objetivo: Tomar decisão de arquitetura sabendo o custo de cada escolha.
+  ordem: 5
+  etapas:
+    - titulo: Designing Data-Intensive Applications
+      status: proximo
+    - titulo: Modelagem e índices no Postgres
+      status: proximo
+    - titulo: Filas, idempotência e consistência eventual
+      status: proximo
+    - titulo: System design — exercícios guiados
+      status: proximo

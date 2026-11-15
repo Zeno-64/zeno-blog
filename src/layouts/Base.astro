@@ -1,0 +1,97 @@
+---
+import Rodape from '../components/Rodape.astro'
+import Topo from '../components/Topo.astro'
+import { SITE } from '../lib/site'
+import '../styles/global.css'
+
+interface Props {
+  /** Título da página (sem o " · Zeno"). Vazio na home. */
+  titulo?: string
+  descricao?: string
+  /** Imagem de prévia de link, caminho em public/. */
+  imagem?: string
+  /** Página de post: vira og:type article com datas e tags. */
+  artigo?: { publicado: Date; atualizado?: Date; tags: string[] }
+  /** Barra fina no topo que anda com a leitura. */
+  barraLeitura?: boolean
+}
+
+const { titulo, descricao = SITE.descricao, imagem = SITE.ogPadrao, artigo, barraLeitura = false } = Astro.props
+const tituloCompleto = titulo ? `${titulo} · Zeno` : SITE.titulo
+const canonica = new URL(Astro.url.pathname, Astro.site).href
+const imagemAbsoluta = new URL(imagem, Astro.site).href
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#05070d" />
+    <title>{tituloCompleto}</title>
+    <meta name="description" content={descricao} />
+    <link rel="canonical" href={canonica} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title="Zeno · caderno de estudos (RSS)" href="/rss.xml" />
+    <link rel="alternate" type="application/feed+json" title="Zeno · caderno de estudos (JSON Feed)" href="/feed.json" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content={artigo ? 'article' : 'website'} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="zeno.blog.br" />
+    <meta property="og:title" content={titulo ?? SITE.titulo} />
+    <meta property="og:description" content={descricao} />
+    <meta property="og:url" content={canonica} />
+    <meta property="og:image" content={imagemAbsoluta} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {artigo && <meta property="article:published_time" content={artigo.publicado.toISOString()} />}
+    {artigo?.atualizado && <meta property="article:modified_time" content={artigo.atualizado.toISOString()} />}
+    {artigo?.tags.map((tag) => <meta property="article:tag" content={tag} />)}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,600;1,700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <slot name="head" />
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <a
+      href="#conteudo"
+      class="sr-only z-[100] rounded-full bg-azul px-4 py-2 text-sm text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+    >
+      Pular para o conteúdo
+    </a>
+    {barraLeitura && <div class="barra-leitura" aria-hidden="true" />}
+
+    <!-- Fundo: brilho azul no alto e a malha (decorativo) -->
+    <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div
+        class="absolute left-1/2 top-[-22rem] h-[38rem] w-[64rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(47,129,247,0.22),transparent)]"
+      >
+      </div>
+      <div class="malha absolute inset-0"></div>
+    </div>
+
+    <Topo />
+    <main id="conteudo" class="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 md:px-6">
+      <slot />
+    </main>
+    <Rodape />
+
+    <script>
+      // "/" em qualquer página abre a busca (fora de campo de texto)
+      document.addEventListener('keydown', (e) => {
+        const alvo = e.target as HTMLElement
+        if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return
+        if (alvo.closest('input, textarea, select, [contenteditable="true"]')) return
+        if (location.pathname.startsWith('/busca')) return
+        e.preventDefault()
+        location.href = '/busca/'
+      })
+    </script>
+  </body>
+</html>

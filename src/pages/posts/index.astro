@@ -1,0 +1,132 @@
+---
+import Cabecalho from '../../components/Cabecalho.astro'
+import Base from '../../layouts/Base.astro'
+import {
+  COR_TIPO,
+  dataISO,
+  DESCRICAO_TIPO,
+  formatarData,
+  minutosLeitura,
+  nomeTransicao,
+  postsVisiveis,
+  ROTULO_TIPO,
+  urlPost,
+  type TipoPost,
+} from '../../lib/posts'
+import { TIPOS } from '../../lib/tipos'
+
+const posts = await postsVisiveis()
+const contagem = (tipo: TipoPost) => posts.filter((p) => p.data.tipo === tipo).length
+const tiposUsados = TIPOS.filter((t) => contagem(t) > 0)
+
+// arquivo por ano, do mais novo para o mais antigo
+const porAno = new Map<number, typeof posts>()
+for (const p of posts) {
+  const ano = p.data.data.getUTCFullYear()
+  porAno.set(ano, [...(porAno.get(ano) ?? []), p])
+}
+---
+
+<Base titulo="Posts" descricao="Todos os posts do caderno de estudos do Zeno, por ano: artigos, TILs, notas de estudo, devlogs e leituras.">
+  <Cabecalho comando="ls -t ~/posts" titulo="Posts" descricao="Tudo o que já saiu, do mais novo para o mais antigo.">
+    <div class="entrada mt-8 flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo" style="--i: 3">
+      <button type="button" data-filtro="todos" aria-pressed="true" class="filtro">
+        Todos <span class="font-mono text-[0.7rem] opacity-60">{posts.length}</span>
+      </button>
+      {
+        tiposUsados.map((t) => (
+          <button type="button" data-filtro={t} aria-pressed="false" class="filtro" title={DESCRICAO_TIPO[t]}>
+            {ROTULO_TIPO[t]} <span class="font-mono text-[0.7rem] opacity-60">{contagem(t)}</span>
+          </button>
+        ))
+      }
+    </div>
+  </Cabecalho>
+
+  {
+    [...porAno].map(([ano, lista]) => (
+      <section class="ano grid gap-4 border-t border-white/[0.06] py-8 md:grid-cols-[7rem_1fr]" aria-labelledby={`ano-${ano}`}>
+        <h2 id={`ano-${ano}`} class="font-marca text-2xl font-bold italic text-fraco md:sticky md:top-24 md:self-start">
+          {ano}
+        </h2>
+        <ul class="divide-y divide-white/[0.05]">
+          {lista.map((p) => (
+            <li data-tipo={p.data.tipo} class="group relative grid gap-1 py-4 sm:grid-cols-[6.5rem_1fr] sm:gap-5">
+              <time datetime={dataISO(p.data.data)} class="font-mono text-xs leading-7 text-suave">
+                {formatarData(p.data.data).replace(/ \d{4}$/, '')}
+              </time>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class:list={['selo', COR_TIPO[p.data.tipo]]}>{ROTULO_TIPO[p.data.tipo]}</span>
+                  {p.data.rascunho && <span class="selo selo-ambar">rascunho</span>}
+                  <span class="font-mono text-[0.68rem] text-fraco">{minutosLeitura(p)} min</span>
+                </div>
+                <a
+                  href={urlPost(p)}
+                  class="mt-1.5 block font-marca text-xl font-bold italic leading-snug text-titulo transition-colors after:absolute after:inset-0 group-hover:text-gelo-claro"
+                  style={`view-transition-name: ${nomeTransicao(p)}`}
+                >
+                  {p.data.titulo}
+                </a>
+                <p class="mt-1 text-sm leading-relaxed text-suave">{p.data.descricao}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+  <p id="vazio" hidden class="py-10 text-suave">Nenhum post desse tipo ainda.</p>
+</Base>
+
+<style>
+  .filtro {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    padding: 0.4rem 0.95rem;
+    font-size: 0.875rem;
+    color: var(--color-suave);
+    transition:
+      color 0.2s,
+      border-color 0.2s,
+      background-color 0.2s;
+  }
+  .filtro:hover {
+    color: var(--color-titulo);
+    border-color: rgb(255 255 255 / 0.25);
+  }
+  .filtro[aria-pressed='true'] {
+    color: var(--color-titulo);
+    border-color: color-mix(in oklab, var(--color-azul-claro) 55%, transparent);
+    background: color-mix(in oklab, var(--color-azul) 16%, transparent);
+  }
+</style>
+
+<script>
+  // Filtro por tipo. O endereço guarda a escolha (#til, #artigo…), então
+  // dá para mandar o link já filtrado.
+  const botoes = [...document.querySelectorAll<HTMLButtonElement>('[data-filtro]')]
+  const itens = [...document.querySelectorAll<HTMLLIElement>('li[data-tipo]')]
+  const anos = [...document.querySelectorAll<HTMLElement>('section.ano')]
+  const vazio = document.getElementById('vazio')!
+
+  function aplicar(tipo: string) {
+    if (!botoes.some((b) => b.dataset.filtro === tipo)) tipo = 'todos'
+    botoes.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filtro === tipo)))
+    itens.forEach((li) => (li.hidden = tipo !== 'todos' && li.dataset.tipo !== tipo))
+    anos.forEach((s) => (s.hidden = ![...s.querySelectorAll('li[data-tipo]')].some((li) => !(li as HTMLElement).hidden)))
+    vazio.hidden = itens.some((li) => !li.hidden)
+  }
+
+  botoes.forEach((b) =>
+    b.addEventListener('click', () => {
+      const tipo = b.dataset.filtro!
+      history.replaceState(null, '', tipo === 'todos' ? location.pathname : `#${tipo}`)
+      aplicar(tipo)
+    }),
+  )
+  aplicar(location.hash.slice(1) || 'todos')
+</script>

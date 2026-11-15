@@ -1,0 +1,19 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# O zeno.dev.br lê os últimos posts daqui (fetch no navegador).
+# Feed é público: liberado para qualquer origem.
+/feed.json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=900
+
+/rss.xml
+  Cache-Control: public, max-age=900
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/og/*
+  Cache-Control: public, max-age=604800

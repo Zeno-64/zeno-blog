@@ -1,0 +1,130 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content'
+import BarraTrilha from '../../components/BarraTrilha.astro'
+import Cabecalho from '../../components/Cabecalho.astro'
+import ItemPost from '../../components/ItemPost.astro'
+import Base from '../../layouts/Base.astro'
+import { postsVisiveis } from '../../lib/posts'
+
+export async function getStaticPaths() {
+  const trilhas = await getCollection('trilhas')
+  return trilhas.map((trilha) => ({ params: { id: trilha.id }, props: { trilha } }))
+}
+
+interface Props {
+  trilha: CollectionEntry<'trilhas'>
+}
+const { trilha } = Astro.props
+const { nome, descricao, objetivo, etapas } = trilha.data
+
+const posts = await postsVisiveis((p) => p.data.trilha?.id === trilha.id)
+const leituras = (await getCollection('biblioteca')).filter((b) => b.data.trilha?.id === trilha.id)
+const ideias = (await getCollection('ideias')).filter((i) => i.data.trilha?.id === trilha.id)
+
+const ICONE = { feito: '✓', estudando: '◐', proximo: '○' } as const
+const ROTULO = { feito: 'feito', estudando: 'estudando', proximo: 'próximo' } as const
+const COR = { feito: 'text-azul-claro', estudando: 'text-gelo', proximo: 'text-fraco' } as const
+const STATUS_LEITURA = { quero: 'quero ler', lendo: 'lendo', lido: 'lido', parei: 'parei' } as const
+---
+
+<Base titulo={`Trilha: ${nome}`} descricao={descricao}>
+  <Cabecalho comando={`cat ~/estudos/trilhas/${trilha.id}.yaml`} titulo={nome} descricao={descricao}>
+    <p class="entrada mt-4 max-w-2xl text-sm text-suave" style="--i: 3">
+      <span class="font-mono text-xs text-azul-claro">objetivo:</span> {objetivo}
+    </p>
+    <div class="entrada mt-6 max-w-md" style="--i: 4"><BarraTrilha trilha={trilha} /></div>
+  </Cabecalho>
+
+  <div class="grid gap-14 lg:grid-cols-[1.1fr_1fr]">
+    <section aria-labelledby="etapas">
+      <h2 id="etapas" class="titulo-marca text-2xl">Etapas</h2>
+      <ol class="relative mt-6 space-y-5 border-l border-white/[0.08] pl-7">
+        {
+          etapas.map((e) => (
+            <li class="relative">
+              <span
+                class:list={[
+                  'absolute -left-[2.3rem] top-0 grid size-7 place-items-center rounded-full border bg-fundo font-mono text-xs',
+                  e.status === 'feito' && 'border-azul/50 text-azul-claro',
+                  e.status === 'estudando' && 'border-gelo/50 text-gelo shadow-[0_0_14px_rgba(159,216,255,0.35)]',
+                  e.status === 'proximo' && 'border-white/10 text-fraco',
+                ]}
+                aria-hidden="true"
+              >
+                {ICONE[e.status]}
+              </span>
+              <p class:list={['font-medium', e.status === 'proximo' ? 'text-texto' : 'text-titulo']}>
+                {e.titulo} <span class:list={['ml-1 font-mono text-[0.7rem] font-normal', COR[e.status]]}>{ROTULO[e.status]}</span>
+              </p>
+              {e.nota && <p class="mt-1 text-sm leading-relaxed text-suave">{e.nota}</p>}
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <div class="space-y-12">
+      <section aria-labelledby="posts-trilha">
+        <h2 id="posts-trilha" class="titulo-marca text-2xl">Posts</h2>
+        {
+          posts.length > 0 ? (
+            <ul class="mt-4 divide-y divide-white/[0.05]">
+              {posts.map((p, i) => (
+                <ItemPost post={p} compacto i={i} />
+              ))}
+            </ul>
+          ) : (
+            <p class="mt-3 text-sm text-suave">Nenhum post nesta trilha ainda.</p>
+          )
+        }
+      </section>
+
+      {
+        leituras.length > 0 && (
+          <section aria-labelledby="leituras">
+            <h2 id="leituras" class="titulo-marca text-2xl">
+              Leituras
+            </h2>
+            <ul class="mt-4 space-y-3">
+              {leituras.map((b) => (
+                <li class="flex items-start justify-between gap-4 rounded-xl border border-white/[0.06] bg-vidro/40 px-4 py-3">
+                  <div>
+                    {b.data.url ? (
+                      <a href={b.data.url} target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-titulo hover:text-azul-claro">
+                        {b.data.titulo} <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      <p class="text-sm font-medium text-titulo">{b.data.titulo}</p>
+                    )}
+                    {b.data.autor && <p class="mt-0.5 text-xs text-suave">{b.data.autor}</p>}
+                  </div>
+                  <span class="selo selo-cinza shrink-0">{STATUS_LEITURA[b.data.status]}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      {
+        ideias.length > 0 && (
+          <section aria-labelledby="ideias-trilha">
+            <h2 id="ideias-trilha" class="titulo-marca text-2xl">
+              Na fila
+            </h2>
+            <ul class="mt-4 space-y-2 text-sm">
+              {ideias.map((i) => (
+                <li class="flex gap-3 text-texto">
+                  <span class="font-mono text-xs leading-6 text-fraco">○</span>
+                  {i.data.titulo}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+    </div>
+  </div>
+
+  <p class="mt-16"><a href="/trilhas/" class="font-mono text-sm text-azul-claro hover:underline">← todas as trilhas</a></p>
+</Base>

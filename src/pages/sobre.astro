@@ -1,0 +1,96 @@
+---
+import Cabecalho from '../components/Cabecalho.astro'
+import Janela from '../components/Janela.astro'
+import Base from '../layouts/Base.astro'
+import { COR_TIPO, DESCRICAO_TIPO, ROTULO_TIPO } from '../lib/posts'
+import { TIPOS } from '../lib/tipos'
+
+const principios = [
+  {
+    titulo: 'Escrever para entender',
+    texto: 'Se não consigo explicar em texto simples, ainda não entendi. O post é o teste.',
+  },
+  {
+    titulo: 'Pequeno vale',
+    texto: 'Um TIL de cinco linhas publicado ganha de um artigo perfeito que nunca sai do rascunho.',
+  },
+  {
+    titulo: 'Mostrar o caminho',
+    texto: 'Erro, tentativa e decisão contam tanto quanto a resposta final — é isso que ajuda quem vem depois.',
+  },
+  {
+    titulo: 'Corrigir em público',
+    texto: 'Post errado ganha atualização com data, não some. Aprender inclui errar por escrito.',
+  },
+]
+---
+
+<Base titulo="Sobre o caderno" descricao="O que é o caderno de estudos do Zeno, como ele é organizado e como acompanhar.">
+  <Cabecalho
+    comando="cat ~/estudos/LEIAME.md"
+    titulo="Sobre o caderno"
+    descricao="Sou o Zeno: engenheiro de software, backend em Java, Spring e AWS no trabalho, e sites e apps para negócios pequenos fora dele. Este é o lugar onde anoto o que aprendo no caminho."
+  />
+
+  <div class="grid gap-14 lg:grid-cols-[1.2fr_1fr]">
+    <div class="prosa">
+      <p>
+        Todo projeto deixa uma pilha de descobertas: o erro que levou uma tarde, a configuração que ninguém documenta, o
+        jeito melhor de fazer que só aparece na terceira tentativa. Antes elas ficavam espalhadas em arquivos de anotação,
+        mensagens para mim mesmo e na memória — que é o pior lugar.
+      </p>
+      <p>
+        Aqui elas viram texto. Escrever obriga a entender de verdade, e publicar obriga a escrever direito. De quebra,
+        quem esbarrar no mesmo problema encontra a resposta.
+      </p>
+      <p>
+        Os projetos que geram boa parte destes posts estão em <a href="https://zeno.dev.br/projetos">zeno.dev.br</a>.
+        Quem eu sou, com mais detalhe, está em <a href="https://zeno.dev.br/sobre">zeno.dev.br/sobre</a>.
+      </p>
+
+      <h2>Como está organizado</h2>
+      <ul>
+        <li><strong>Trilhas</strong> — o mapa de cada assunto que estou estudando, com etapas e status.</li>
+        <li><strong>Séries</strong> — posts em sequência, para ler em ordem.</li>
+        <li><strong>Biblioteca</strong> — livros, cursos e documentação: lendo, na fila e lidos.</li>
+        <li><strong>Revisão</strong> — as perguntas do fim dos posts, em repetição espaçada.</li>
+        <li><strong>Na fila</strong> — os assuntos que ainda vão virar post.</li>
+      </ul>
+
+      <h2>Como acompanhar</h2>
+      <p>
+        Pelo <a href="/rss.xml">RSS</a> (qualquer leitor de feed, como o Feedly ou o NetNewsWire) ou pelo
+        <a href="/feed.json">JSON Feed</a>. Sem newsletter, sem pop-up, sem rastreador.
+      </p>
+    </div>
+
+    <div class="space-y-8">
+      <Janela titulo="tipos-de-post.md">
+        <ul class="space-y-4 p-5">
+          {
+            TIPOS.map((t) => (
+              <li>
+                <span class:list={['selo', COR_TIPO[t]]}>{ROTULO_TIPO[t]}</span>
+                <p class="mt-1.5 text-sm leading-relaxed text-texto">{DESCRICAO_TIPO[t]}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </Janela>
+
+      <section aria-labelledby="principios">
+        <h2 id="principios" class="font-mono text-xs uppercase tracking-[0.2em] text-azul-claro">// princípios</h2>
+        <ul class="mt-4 space-y-4">
+          {
+            principios.map((p) => (
+              <li class="rounded-xl border border-white/[0.06] bg-vidro/40 px-4 py-3.5">
+                <p class="font-marca text-lg font-bold italic text-titulo">{p.titulo}</p>
+                <p class="mt-1 text-sm leading-relaxed text-texto">{p.texto}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+</Base>

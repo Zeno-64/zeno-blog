@@ -1,0 +1,39 @@
+---
+import Cabecalho from '../../components/Cabecalho.astro'
+import ItemPost from '../../components/ItemPost.astro'
+import Base from '../../layouts/Base.astro'
+import { postsVisiveis, slugTag, type Post } from '../../lib/posts'
+
+export async function getStaticPaths() {
+  const posts = await postsVisiveis()
+  // várias grafias podem cair no mesmo endereço ("Java" e "java"): junta
+  const porSlug = new Map<string, { nome: string; posts: Post[] }>()
+  for (const p of posts) {
+    for (const t of p.data.tags) {
+      const slug = slugTag(t)
+      const atual = porSlug.get(slug) ?? { nome: t, posts: [] }
+      if (!atual.posts.includes(p)) atual.posts.push(p)
+      porSlug.set(slug, atual)
+    }
+  }
+  return [...porSlug].map(([tag, { nome, posts }]) => ({ params: { tag }, props: { nome, posts } }))
+}
+
+interface Props {
+  nome: string
+  posts: Post[]
+}
+const { nome, posts } = Astro.props
+---
+
+<Base titulo={`#${nome}`} descricao={`Posts sobre ${nome} no caderno de estudos do Zeno.`}>
+  <Cabecalho
+    comando={`grep -l '${nome}' ~/posts/*`}
+    titulo={`#${nome}`}
+    descricao={`${posts.length} ${posts.length === 1 ? 'post' : 'posts'}.`}
+  />
+  <ul class="grid gap-4">
+    {posts.map((p, i) => <ItemPost post={p} i={i} />)}
+  </ul>
+  <p class="mt-14"><a href="/tags/" class="font-mono text-sm text-azul-claro hover:underline">← todas as tags</a></p>
+</Base>

@@ -1,0 +1,41 @@
+---
+import Cabecalho from '../../components/Cabecalho.astro'
+import ItemPost from '../../components/ItemPost.astro'
+import Base from '../../layouts/Base.astro'
+import { postsVisiveis } from '../../lib/posts'
+
+const tils = await postsVisiveis((p) => p.data.tipo === 'til')
+
+// agrupado por mês: "novembro de 2026"
+const mes = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+const porMes = new Map<string, typeof tils>()
+for (const p of tils) {
+  const chave = mes.format(p.data.data)
+  porMes.set(chave, [...(porMes.get(chave) ?? []), p])
+}
+---
+
+<Base titulo="TIL — hoje eu aprendi" descricao="Descobertas pequenas do dia a dia de desenvolvimento, em poucas linhas cada.">
+  <Cabecalho
+    comando="grep -r 'hoje eu aprendi' ~/posts"
+    titulo="Hoje eu aprendi"
+    descricao="TIL (today I learned): o erro que levou uma tarde, a flag que ninguém conta, o detalhe da documentação. Curto de propósito — escrever pequeno é o que mantém o hábito."
+  />
+
+  {
+    tils.length === 0 ? (
+      <p class="text-suave">Nenhum TIL ainda.</p>
+    ) : (
+      [...porMes].map(([nome, lista]) => (
+        <section class="border-t border-white/[0.06] py-6" aria-label={nome}>
+          <h2 class="font-mono text-xs uppercase tracking-[0.2em] text-azul-claro">{nome}</h2>
+          <ul class="mt-2 divide-y divide-white/[0.05]">
+            {lista.map((p, i) => (
+              <ItemPost post={p} compacto i={i} />
+            ))}
+          </ul>
+        </section>
+      ))
+    )
+  }
+</Base>

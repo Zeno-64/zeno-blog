@@ -1,0 +1,71 @@
+---
+import { COR_TIPO, formatarData, dataISO, minutosLeitura, nomeTransicao, ROTULO_TIPO, slugTag, urlPost, type Post } from '../lib/posts'
+
+interface Props {
+  post: Post
+  /** Versão de uma linha (listas de TIL, arquivo). */
+  compacto?: boolean
+  /** Posição na lista, para a entrada em cascata. */
+  i?: number
+}
+
+const { post, compacto = false, i = 0 } = Astro.props
+const { titulo, descricao, data, tipo, tags, rascunho } = post.data
+---
+
+{
+  compacto ? (
+    <li class="entrada group relative flex items-baseline gap-4 py-3" style={`--i: ${i}`}>
+      <time datetime={dataISO(data)} class="w-24 shrink-0 font-mono text-xs text-suave">
+        {formatarData(data)}
+      </time>
+      <div class="min-w-0">
+        <a
+          href={urlPost(post)}
+          class="font-medium text-titulo transition-colors after:absolute after:inset-0 group-hover:text-azul-claro"
+          style={`view-transition-name: ${nomeTransicao(post)}`}
+        >
+          {titulo}
+        </a>
+        {rascunho && <span class="selo selo-ambar ml-2">rascunho</span>}
+        <p class="mt-0.5 line-clamp-1 text-sm text-suave">{descricao}</p>
+      </div>
+    </li>
+  ) : (
+    <li class="entrada group relative" style={`--i: ${i}`}>
+      <article class="rounded-2xl border border-white/[0.06] bg-vidro/40 p-5 transition duration-300 group-hover:border-azul-claro/25 group-hover:bg-vidro/80 md:p-6">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs text-suave">
+          <span class:list={['selo', COR_TIPO[tipo]]}>{ROTULO_TIPO[tipo]}</span>
+          <time datetime={dataISO(data)}>{formatarData(data)}</time>
+          <span aria-hidden="true" class="text-fraco">·</span>
+          <span>{minutosLeitura(post)} min de leitura</span>
+          {rascunho && <span class="selo selo-ambar">rascunho</span>}
+        </div>
+        <h3 class="titulo-marca mt-3 text-[1.45rem] md:text-[1.6rem]">
+          <a
+            href={urlPost(post)}
+            class="transition-colors after:absolute after:inset-0 group-hover:text-gelo-claro"
+            style={`view-transition-name: ${nomeTransicao(post)}`}
+          >
+            {titulo}
+          </a>
+        </h3>
+        <p class="mt-2 leading-relaxed text-texto">{descricao}</p>
+        {tags.length > 0 && (
+          <ul class="relative z-10 mt-4 flex flex-wrap gap-2" aria-label="Tags">
+            {tags.map((tag) => (
+              <li>
+                <a
+                  href={`/tags/${slugTag(tag)}/`}
+                  class="rounded-md border border-white/[0.07] px-2 py-0.5 font-mono text-[0.68rem] text-suave transition hover:border-azul-claro/40 hover:text-titulo"
+                >
+                  #{tag}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </article>
+    </li>
+  )
+}

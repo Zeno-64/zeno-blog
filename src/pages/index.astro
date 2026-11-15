@@ -1,0 +1,189 @@
+---
+import { getCollection } from 'astro:content'
+import BarraTrilha from '../components/BarraTrilha.astro'
+import ItemPost from '../components/ItemPost.astro'
+import Janela from '../components/Janela.astro'
+import Base from '../layouts/Base.astro'
+import { palavras, postsVisiveis, ROTULO_TIPO, urlPost } from '../lib/posts'
+
+const posts = await postsVisiveis()
+const fixados = posts.filter((p) => p.data.fixado)
+// cada post aparece uma vez por página (o nome da transição é único)
+const ultimos = posts.filter((p) => p.data.tipo !== 'til' && !p.data.fixado).slice(0, 5)
+const tils = posts.filter((p) => p.data.tipo === 'til' && !p.data.fixado).slice(0, 5)
+const trilhas = (await getCollection('trilhas')).sort((a, b) => a.data.ordem - b.data.ordem)
+const lendo = (await getCollection('biblioteca')).filter((b) => b.data.status === 'lendo')
+const ideias = await getCollection('ideias')
+
+const totalPalavras = posts.reduce((soma, p) => soma + palavras(p), 0)
+const numero = new Intl.NumberFormat('pt-BR')
+
+/** "hash" de commit de mentira, estável por post */
+const hash = (texto: string) => {
+  let h = 2166136261
+  for (const c of texto) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
+  return (h >>> 0).toString(16).padStart(8, '0').slice(0, 7)
+}
+
+const botaoPrimario =
+  'inline-flex items-center gap-2 rounded-full bg-azul px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_28px_-6px_rgba(47,129,247,0.9)] transition hover:bg-[#3d8dfa]'
+const botaoSecundario =
+  'inline-flex items-center gap-2 rounded-full border border-white/12 px-5 py-2.5 text-sm text-titulo transition hover:border-azul-claro/50 hover:bg-white/[0.03]'
+---
+
+<Base>
+  <!-- ============ Abertura ============ -->
+  <!-- minmax(0, …) e min-w-0: as linhas do terminal não quebram e, sem isso, alargariam a coluna -->
+  <section class="grid grid-cols-1 gap-12 pb-16 pt-14 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:items-center md:pb-24 md:pt-24">
+    <div class="min-w-0">
+      <p
+        class="entrada inline-flex items-center gap-2 rounded-full border border-azul/25 bg-azul/[0.08] px-3 py-1 font-mono text-xs text-azul-claro"
+      >
+        <span class="size-1.5 rounded-full bg-verde shadow-[0_0_8px_rgba(74,222,128,0.8)]"></span>
+        aprendendo em público
+      </p>
+      <h1 class="entrada titulo-marca mt-6 text-[3.1rem] md:text-7xl" style="--i: 1">
+        Caderno de <span class="neon-azul">estudos</span>
+      </h1>
+      <p class="entrada mt-6 max-w-xl text-lg leading-relaxed text-texto" style="--i: 2">
+        O que eu aprendo construindo: backend de dia, front de noite, apps nos intervalos. Texto curto quando a
+        descoberta é pequena, longo quando ela merece.
+      </p>
+      <div class="entrada mt-8 flex flex-wrap gap-3" style="--i: 3">
+        <a href="/posts/" class={botaoPrimario}>Ler os posts <span aria-hidden="true">→</span></a>
+        <a href="/trilhas/" class={botaoSecundario}>Ver as trilhas</a>
+      </div>
+      <p class="entrada mt-7 font-mono text-xs text-suave" style="--i: 4">
+        {posts.length} posts · {numero.format(totalPalavras)} palavras · <a href="/rss.xml" class="text-ambar hover:underline">RSS</a>
+      </p>
+    </div>
+
+    <div class="entrada min-w-0" style="--i: 2">
+      <Janela titulo="~/estudos — git log --oneline" direita="main">
+        <ol class="space-y-1.5 px-4 py-4 font-mono text-[0.74rem] leading-relaxed" aria-label="Posts mais recentes">
+          {
+            posts.slice(0, 6).map((p) => (
+              <li class="truncate">
+                <a href={urlPost(p)} class="group/linha">
+                  <span class="text-ambar">{hash(p.id)}</span>{' '}
+                  <span class="text-suave">{ROTULO_TIPO[p.data.tipo].toLowerCase()}:</span>{' '}
+                  <span class="text-titulo transition-colors group-hover/linha:text-azul-claro">{p.data.titulo}</span>
+                </a>
+              </li>
+            ))
+          }
+          <li class="text-fraco" aria-hidden="true">
+            <span class="text-azul-claro">$</span> <span class="inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse bg-azul-claro"></span>
+          </li>
+        </ol>
+      </Janela>
+    </div>
+  </section>
+
+  <!-- ============ Comece por aqui ============ -->
+  {
+    fixados.length > 0 && (
+      <section class="pb-16" aria-labelledby="comece">
+        <h2 id="comece" class="font-mono text-xs uppercase tracking-[0.2em] text-azul-claro">// comece por aqui</h2>
+        <ul class="mt-5 grid gap-4">
+          {fixados.map((p, i) => <ItemPost post={p} i={i} />)}
+        </ul>
+      </section>
+    )
+  }
+
+  <!-- ============ Últimos posts + TIL ============ -->
+  <div class="grid gap-14 pb-20 lg:grid-cols-[1.5fr_1fr]">
+    <section aria-labelledby="ultimos">
+      <div class="flex items-end justify-between gap-4">
+        <h2 id="ultimos" class="titulo-marca text-3xl">Últimos posts</h2>
+        <a href="/posts/" class="font-mono text-xs text-azul-claro hover:underline">todos →</a>
+      </div>
+      {
+        ultimos.length > 0 ? (
+          <ul class="mt-6 grid gap-4">
+            {ultimos.map((p, i) => <ItemPost post={p} i={i} />)}
+          </ul>
+        ) : (
+          <p class="mt-6 text-suave">Nenhum post ainda — o primeiro está saindo.</p>
+        )
+      }
+    </section>
+
+    <section aria-labelledby="til">
+      <div class="flex items-end justify-between gap-4">
+        <h2 id="til" class="titulo-marca text-3xl">Hoje eu aprendi</h2>
+        <a href="/til/" class="font-mono text-xs text-azul-claro hover:underline">TIL →</a>
+      </div>
+      <p class="mt-2 text-sm text-suave">Descobertas pequenas, em poucas linhas.</p>
+      <ul class="mt-4 divide-y divide-white/[0.06]">
+        {tils.map((p, i) => <ItemPost post={p} compacto i={i} />)}
+      </ul>
+
+      {
+        lendo.length > 0 && (
+          <div class="mt-12">
+            <h2 class="font-mono text-xs uppercase tracking-[0.2em] text-azul-claro">// na mesa agora</h2>
+            <ul class="mt-4 space-y-3">
+              {lendo.map((b) => (
+                <li class="rounded-xl border border-white/[0.06] bg-vidro/40 px-4 py-3">
+                  <p class="text-sm font-medium text-titulo">{b.data.titulo}</p>
+                  {b.data.autor && <p class="mt-0.5 text-xs text-suave">{b.data.autor}</p>}
+                </li>
+              ))}
+            </ul>
+            <a href="/biblioteca/" class="mt-3 inline-block font-mono text-xs text-azul-claro hover:underline">
+              biblioteca →
+            </a>
+          </div>
+        )
+      }
+    </section>
+  </div>
+
+  <!-- ============ Trilhas ============ -->
+  <section class="pb-20" aria-labelledby="trilhas">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <h2 id="trilhas" class="titulo-marca text-3xl">Trilhas de estudo</h2>
+        <p class="mt-2 text-sm text-suave">O mapa de cada assunto: o que já foi, o que está na mesa, o que vem.</p>
+      </div>
+      <a href="/trilhas/" class="shrink-0 font-mono text-xs text-azul-claro hover:underline">todas →</a>
+    </div>
+    <ul class="mt-6 grid gap-4 md:grid-cols-2">
+      {
+        trilhas.map((t, i) => (
+          <li class="entrada group relative" style={`--i: ${i}`}>
+            <div class="h-full rounded-2xl border border-white/[0.06] bg-vidro/40 p-5 transition duration-300 group-hover:border-azul-claro/25 group-hover:bg-vidro/80">
+              <h3 class="titulo-marca text-xl">
+                <a href={`/trilhas/${t.id}/`} class="after:absolute after:inset-0">
+                  {t.data.nome}
+                </a>
+              </h3>
+              <p class="mt-1.5 text-sm leading-relaxed text-suave">{t.data.descricao}</p>
+              <div class="mt-4">
+                <BarraTrilha trilha={t} />
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- ============ Na fila ============ -->
+  <section aria-labelledby="fila" class="pb-6">
+    <Janela titulo="~/estudos/na-fila.md" luz="gelo">
+      <div class="grid gap-6 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-8">
+        <div>
+          <h2 id="fila" class="titulo-marca text-2xl">{ideias.length} assuntos na fila</h2>
+          <p class="mt-2 max-w-xl text-texto">
+            Ideias que ainda vão virar post. A lista é pública de propósito: funciona como compromisso — e como
+            aviso do que vem por aí.
+          </p>
+        </div>
+        <a href="/ideias/" class={botaoSecundario}>Ver a fila <span aria-hidden="true">→</span></a>
+      </div>
+    </Janela>
+  </section>
+</Base>

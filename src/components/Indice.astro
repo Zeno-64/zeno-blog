@@ -1,0 +1,62 @@
+---
+import type { MarkdownHeading } from 'astro'
+
+/** Índice do post (títulos ## e ###). O item da seção que está na tela
+ *  acende enquanto você lê. */
+interface Props {
+  titulos: MarkdownHeading[]
+}
+const titulos = Astro.props.titulos.filter((t) => t.depth === 2 || t.depth === 3)
+---
+
+{
+  titulos.length >= 2 && (
+    <nav aria-label="Neste post" class="indice">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-fraco">neste post</p>
+      <ol class="mt-3 space-y-1.5 border-l border-white/[0.07] text-sm">
+        {titulos.map((t) => (
+          <li>
+            <a
+              href={`#${t.slug}`}
+              data-alvo={t.slug}
+              class:list={[
+                '-ml-px block border-l border-transparent py-0.5 leading-snug text-suave transition-colors hover:text-titulo',
+                t.depth === 3 ? 'pl-7 text-[0.82rem]' : 'pl-4',
+              ]}
+            >
+              {t.text}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+<script>
+  // Acende no índice a seção que está aparecendo
+  const links = new Map<string, HTMLAnchorElement>()
+  document.querySelectorAll<HTMLAnchorElement>('.indice a[data-alvo]').forEach((a) => links.set(a.dataset.alvo!, a))
+  if (links.size > 0) {
+    const ativar = (id: string) => {
+      links.forEach((a, chave) => {
+        const ativo = chave === id
+        a.classList.toggle('!text-azul-claro', ativo)
+        a.classList.toggle('!border-azul-claro', ativo)
+        if (ativo) a.setAttribute('aria-current', 'location')
+        else a.removeAttribute('aria-current')
+      })
+    }
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        const visivel = entradas.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
+        if (visivel) ativar(visivel.target.id)
+      },
+      { rootMargin: '-15% 0px -70% 0px' },
+    )
+    links.forEach((_, id) => {
+      const alvo = document.getElementById(id)
+      if (alvo) observador.observe(alvo)
+    })
+  }
+</script>

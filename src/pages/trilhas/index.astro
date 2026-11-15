@@ -1,0 +1,76 @@
+---
+import { getCollection } from 'astro:content'
+import BarraTrilha from '../../components/BarraTrilha.astro'
+import Cabecalho from '../../components/Cabecalho.astro'
+import Base from '../../layouts/Base.astro'
+import { postsVisiveis } from '../../lib/posts'
+
+const trilhas = (await getCollection('trilhas')).sort((a, b) => a.data.ordem - b.data.ordem)
+const posts = await postsVisiveis()
+const postsDa = (id: string) => posts.filter((p) => p.data.trilha?.id === id).length
+const estudandoAgora = trilhas.flatMap((t) =>
+  t.data.etapas.filter((e) => e.status === 'estudando').map((e) => ({ trilha: t, etapa: e })),
+)
+---
+
+<Base titulo="Trilhas de estudo" descricao="O mapa de estudos do Zeno: cada assunto com o que já foi feito, o que está em estudo e os próximos passos.">
+  <Cabecalho
+    comando="cat ~/estudos/mapa.yaml"
+    titulo="Trilhas de estudo"
+    descricao="Cada trilha é um assunto com começo, meio e próximo passo. Ver o caminho inteiro ajuda a não estudar no escuro — e a saber o que dizer não."
+  />
+
+  {
+    estudandoAgora.length > 0 && (
+      <section class="mb-12 rounded-2xl border border-gelo/20 bg-gelo/[0.04] p-5 md:p-6" aria-labelledby="agora">
+        <h2 id="agora" class="font-mono text-xs uppercase tracking-[0.2em] text-gelo">
+          // estudando agora
+        </h2>
+        <ul class="mt-4 grid gap-x-8 gap-y-2 md:grid-cols-2">
+          {estudandoAgora.map(({ trilha, etapa }) => (
+            <li class="flex items-baseline gap-3 text-sm">
+              <span class="size-1.5 shrink-0 translate-y-[-1px] rotate-45 bg-gelo" aria-hidden="true" />
+              <span>
+                <span class="text-titulo">{etapa.titulo}</span>{' '}
+                <a href={`/trilhas/${trilha.id}/`} class="text-suave hover:text-azul-claro">
+                  — {trilha.data.nome}
+                </a>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <ul class="grid gap-5 md:grid-cols-2">
+    {
+      trilhas.map((t, i) => (
+        <li class="entrada group relative" style={`--i: ${i}`}>
+          <article class="flex h-full flex-col rounded-2xl border border-white/[0.06] bg-vidro/40 p-6 transition duration-300 group-hover:border-azul-claro/25 group-hover:bg-vidro/80">
+            <h2 class="titulo-marca text-2xl">
+              <a href={`/trilhas/${t.id}/`} class="after:absolute after:inset-0">
+                {t.data.nome}
+              </a>
+            </h2>
+            <p class="mt-2 leading-relaxed text-texto">{t.data.descricao}</p>
+            <p class="mt-3 text-sm text-suave">
+              <span class="font-mono text-xs text-azul-claro">objetivo:</span> {t.data.objetivo}
+            </p>
+            <div class="mt-auto pt-6">
+              <BarraTrilha trilha={t} />
+              <p class="mt-3 font-mono text-[0.7rem] text-fraco">
+                {postsDa(t.id)} {postsDa(t.id) === 1 ? 'post' : 'posts'} nesta trilha
+              </p>
+            </div>
+          </article>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="mt-12 text-sm text-suave">
+    Quer ver os números? <a href="/progresso/" class="text-azul-claro hover:underline">Progresso</a> mostra o ritmo de
+    publicação e o que já foi lido.
+  </p>
+</Base>

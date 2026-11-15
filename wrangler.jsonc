@@ -1,0 +1,12 @@
+{
+  // Nome do Worker que vai servir zeno.blog.br. Nome diferente do que está
+  // no painel faz o deploy criar um Worker novo e vazio.
+  "name": "zeno-blog",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./dist",
+    // O blog é estático de verdade (um HTML por página): endereço que não
+    // existe recebe o 404.html, com status 404.
+    "not_found_handling": "404-page"
+  }
+}

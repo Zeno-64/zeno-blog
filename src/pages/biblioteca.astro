@@ -1,0 +1,75 @@
+---
+import { getCollection, getEntry } from 'astro:content'
+import Cabecalho from '../components/Cabecalho.astro'
+import Base from '../layouts/Base.astro'
+
+const itens = await getCollection('biblioteca')
+const COLUNAS = [
+  { status: 'lendo', titulo: 'Na mesa', dica: 'o que estou lendo ou fazendo agora' },
+  { status: 'quero', titulo: 'Na fila', dica: 'o que vem depois' },
+  { status: 'lido', titulo: 'Lidos', dica: 'terminados — alguns viraram post' },
+  { status: 'parei', titulo: 'Parei', dica: 'larguei no meio, e tudo bem' },
+] as const
+const TIPO = { livro: 'livro', curso: 'curso', documentacao: 'documentação', video: 'vídeo', artigo: 'artigo' } as const
+const nomeTrilha = new Map<string, string>()
+for (const i of itens) {
+  if (i.data.trilha && !nomeTrilha.has(i.data.trilha.id)) {
+    const t = await getEntry(i.data.trilha)
+    if (t) nomeTrilha.set(t.id, t.data.nome)
+  }
+}
+---
+
+<Base titulo="Biblioteca" descricao="Livros, cursos e documentação que o Zeno está estudando, quer estudar e já estudou.">
+  <Cabecalho
+    comando="ls ~/biblioteca"
+    titulo="Biblioteca"
+    descricao="Livros, cursos e documentação. Anotar o que entra na fila evita comprar curso por impulso — e ver a coluna de lidos crescer é um bom combustível."
+  />
+
+  <div class="grid gap-10 md:grid-cols-2">
+    {
+      COLUNAS.map((coluna) => {
+        const lista = itens.filter((i) => i.data.status === coluna.status)
+        if (lista.length === 0 && coluna.status === 'parei') return null
+        return (
+          <section aria-labelledby={`col-${coluna.status}`}>
+            <div class="flex items-baseline justify-between gap-3 border-b border-white/[0.07] pb-2">
+              <h2 id={`col-${coluna.status}`} class="titulo-marca text-2xl">
+                {coluna.titulo} <span class="font-mono text-sm font-normal not-italic text-fraco">{lista.length}</span>
+              </h2>
+              <p class="text-right text-xs text-suave">{coluna.dica}</p>
+            </div>
+            {lista.length === 0 ? (
+              <p class="mt-4 text-sm text-fraco">nada aqui ainda</p>
+            ) : (
+              <ul class="mt-4 space-y-3">
+                {lista.map((b) => (
+                  <li class="rounded-xl border border-white/[0.06] bg-vidro/40 px-4 py-3.5">
+                    <div class="flex items-start justify-between gap-3">
+                      {b.data.url ? (
+                        <a href={b.data.url} target="_blank" rel="noopener noreferrer" class="font-medium text-titulo hover:text-azul-claro">
+                          {b.data.titulo} <span aria-hidden="true" class="text-suave">↗</span>
+                        </a>
+                      ) : (
+                        <p class="font-medium text-titulo">{b.data.titulo}</p>
+                      )}
+                      <span class="selo selo-cinza shrink-0">{TIPO[b.data.tipo]}</span>
+                    </div>
+                    {b.data.autor && <p class="mt-0.5 text-sm text-suave">{b.data.autor}</p>}
+                    {b.data.nota && <p class="mt-2 text-sm leading-relaxed text-texto">{b.data.nota}</p>}
+                    {b.data.trilha && (
+                      <a href={`/trilhas/${b.data.trilha.id}/`} class="mt-2 inline-block font-mono text-[0.7rem] text-azul-claro hover:underline">
+                        trilha: {nomeTrilha.get(b.data.trilha.id)}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )
+      })
+    }
+  </div>
+</Base>

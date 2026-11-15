@@ -1,0 +1,74 @@
+---
+import { dominios, redes } from '../lib/site'
+
+const links = [
+  { rota: '/progresso/', rotulo: 'Progresso' },
+  { rota: '/ideias/', rotulo: 'Na fila' },
+  { rota: '/series/', rotulo: 'Séries' },
+  { rota: '/tags/', rotulo: 'Tags' },
+  { rota: '/busca/', rotulo: 'Busca' },
+]
+const ano = new Date().getFullYear()
+---
+
+<footer class="border-t border-white/[0.06] bg-fundo-2/60">
+  <div class="mx-auto grid max-w-5xl gap-10 px-4 py-12 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr] md:px-6">
+    <div>
+      <p class="font-marca text-lg font-bold italic text-titulo">Zeno · caderno de estudos</p>
+      <p class="mt-2 max-w-xs text-sm leading-relaxed text-suave">
+        Notas do que eu aprendo construindo. Escrito para eu não esquecer — publicado porque alguém pode precisar.
+      </p>
+      <ul class="mt-5 space-y-1.5 font-mono text-xs">
+        {
+          dominios.map((d) => (
+            <li>
+              {d.atual ? (
+                <span class="text-azul-claro">{d.host}</span>
+              ) : (
+                <a href={d.url} class="text-texto transition hover:text-azul-claro">
+                  {d.host} <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              <span class="text-fraco"> — {d.papel}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <nav aria-label="Mais páginas">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-fraco">explorar</p>
+      <ul class="mt-3 space-y-2 text-sm">
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.rota} class="text-texto transition hover:text-azul-claro">
+                {l.rotulo}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-fraco">acompanhar</p>
+      <ul class="mt-3 space-y-2 text-sm">
+        <li><a href="/rss.xml" class="text-texto transition hover:text-ambar">RSS</a></li>
+        <li><a href="/feed.json" class="text-texto transition hover:text-azul-claro">JSON Feed</a></li>
+        {
+          redes.map((r) => (
+            <li>
+              <a href={r.url} target="_blank" rel="noopener noreferrer" class="text-texto transition hover:text-azul-claro">
+                {r.nome} <span aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+  <p class="border-t border-white/[0.04] py-5 text-center font-mono text-[0.68rem] text-fraco">
+    © {ano} Zeno · feito com Astro, publicado no Cloudflare
+  </p>
+</footer>

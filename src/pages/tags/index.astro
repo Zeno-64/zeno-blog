@@ -1,0 +1,31 @@
+---
+import Cabecalho from '../../components/Cabecalho.astro'
+import Base from '../../layouts/Base.astro'
+import { postsVisiveis, slugTag } from '../../lib/posts'
+
+const posts = await postsVisiveis()
+const contagem = new Map<string, number>()
+for (const p of posts) for (const t of p.data.tags) contagem.set(t, (contagem.get(t) ?? 0) + 1)
+const tags = [...contagem].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt-BR'))
+const maior = Math.max(1, ...contagem.values())
+---
+
+<Base titulo="Tags" descricao="Os assuntos do caderno de estudos do Zeno, por tag.">
+  <Cabecalho comando="ls ~/tags" titulo="Tags" descricao={`${tags.length} assuntos, do mais escrito para o menos.`} />
+
+  <ul class="flex flex-wrap gap-3">
+    {
+      tags.map(([tag, n], i) => (
+        <li class="entrada" style={`--i: ${Math.min(i, 12)}`}>
+          <a
+            href={`/tags/${slugTag(tag)}/`}
+            class="inline-flex items-baseline gap-2 rounded-xl border border-white/[0.08] bg-vidro/40 px-3.5 py-2 font-mono text-titulo transition hover:border-azul-claro/40 hover:bg-vidro"
+            style={`font-size: ${0.8 + (n / maior) * 0.35}rem`}
+          >
+            #{tag} <span class="text-[0.7rem] text-suave">{n}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

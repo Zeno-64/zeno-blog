@@ -1,0 +1,161 @@
+---
+import { getCollection } from 'astro:content'
+import BarraTrilha from '../components/BarraTrilha.astro'
+import Cabecalho from '../components/Cabecalho.astro'
+import Base from '../layouts/Base.astro'
+import { COR_TIPO, palavras, postsVisiveis, ROTULO_TIPO } from '../lib/posts'
+import { TIPOS } from '../lib/tipos'
+
+// Tudo calculado no build: a página atualiza a cada publicação.
+const posts = await postsVisiveis()
+const trilhas = (await getCollection('trilhas')).sort((a, b) => a.data.ordem - b.data.ordem)
+const biblioteca = await getCollection('biblioteca')
+const numero = new Intl.NumberFormat('pt-BR')
+
+const DIA = 86_400_000
+const diaUTC = (d: Date) => Math.floor(d.valueOf() / DIA)
+const hoje = diaUTC(new Date())
+
+// ---- sequência de semanas com pelo menos um post ------------------
+// semana começa no domingo (dia 0 do Unix foi uma quinta: +4)
+const semana = (dia: number) => Math.floor((dia + 4) / 7)
+const semanas = new Set(posts.map((p) => semana(diaUTC(p.data.data))))
+let sequencia = 0
+// a semana atual ainda está em aberto: não quebra a sequência
+for (let s = semanas.has(semana(hoje)) ? semana(hoje) : semana(hoje) - 1; semanas.has(s); s--) sequencia++
+
+// ---- mapa de publicação: últimas 53 semanas -----------------------
+const porDia = new Map<number, number>()
+for (const p of posts) porDia.set(diaUTC(p.data.data), (porDia.get(diaUTC(p.data.data)) ?? 0) + 1)
+const inicio = (semana(hoje) - 52) * 7 - 4 // domingo de 52 semanas atrás
+const colunas = Array.from({ length: 53 }, (_, c) =>
+  Array.from({ length: 7 }, (_, l) => {
+    const dia = inicio + c * 7 + l
+    return { dia, n: dia > hoje ? -1 : (porDia.get(dia) ?? 0) }
+  }),
+)
+const noAno = colunas.flat().reduce((s, d) => s + Math.max(0, d.n), 0)
+const fmtDia = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+const fmtMes = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' })
+const rotulosMes = colunas.map((col, c) => {
+  const primeiro = new Date(col[0].dia * DIA)
+  const anterior = c > 0 ? new Date(colunas[c - 1][0].dia * DIA) : null
+  return !anterior || anterior.getUTCMonth() !== primeiro.getUTCMonth() ? fmtMes.format(primeiro).replace('.', '') : ''
+})
+const CLASSE_NIVEL = [
+  'bg-white/[0.05]',
+  'bg-azul/45',
+  'bg-azul-claro/75',
+  'bg-ciano shadow-[0_0_8px_rgba(125,240,255,0.6)]',
+]
+/** Cor do quadrado: futuro (depois de hoje) fica invisível; 3+ posts é o máximo. */
+const classeDia = (n: number) => (n === -1 ? 'opacity-0' : CLASSE_NIVEL[Math.min(n, 3)])
+const dica = (dia: number, n: number) =>
+  n === -1 ? undefined : `${n} ${n === 1 ? 'post' : 'posts'} em ${fmtDia.format(new Date(dia * DIA))}`
+
+const numeros = [
+  { rotulo: 'posts publicados', valor: posts.length },
+  { rotulo: 'palavras escritas', valor: posts.reduce((s, p) => s + palavras(p), 0) },
+  { rotulo: 'nos últimos 12 meses', valor: noAno },
+  { rotulo: sequencia === 1 ? 'semana seguida' : 'semanas seguidas', valor: sequencia },
+]
+const porTipo = TIPOS.map((t) => ({ tipo: t, n: posts.filter((p) => p.data.tipo === t).length }))
+const maiorTipo = Math.max(1, ...porTipo.map((t) => t.n))
+const leitura = {
+  lido: biblioteca.filter((b) => b.data.status === 'lido').length,
+  lendo: biblioteca.filter((b) => b.data.status === 'lendo').length,
+  quero: biblioteca.filter((b) => b.data.status === 'quero').length,
+}
+---
+
+<Base titulo="Progresso" descricao="O ritmo de estudo e publicação do caderno do Zeno, em números.">
+  <Cabecalho
+    comando="git log --since='1 year' | wc -l"
+    titulo="Progresso"
+    descricao="Constância vale mais que intensidade. Estes números existem para lembrar disso — não para competir com ninguém."
+  />
+
+  <dl class="grid grid-cols-2 gap-4 md:grid-cols-4">
+    {
+      numeros.map((n, i) => (
+        <div class="entrada rounded-2xl border border-white/[0.07] bg-vidro/50 px-5 py-5" style={`--i: ${i}`}>
+          <dt class="font-mono text-[0.68rem] text-suave">{n.rotulo}</dt>
+          <dd class="mt-2 font-marca text-4xl font-bold italic text-titulo">{numero.format(n.valor)}</dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <section class="mt-14" aria-labelledby="mapa">
+    <h2 id="mapa" class="titulo-marca text-2xl">Mapa de publicação</h2>
+    <p class="mt-1 text-sm text-suave">Cada quadrado é um dia; quanto mais claro, mais posts.</p>
+    <div class="mt-5 overflow-x-auto rounded-2xl border border-white/[0.07] bg-vidro/40 p-4">
+      <div
+        role="img"
+        aria-label={`Mapa de publicação: ${noAno} ${noAno === 1 ? 'post' : 'posts'} nos últimos 12 meses`}
+        class="inline-grid min-w-max grid-flow-col gap-[3px]"
+        style="grid-template-rows: auto repeat(7, 11px)"
+      >
+        {
+          colunas.map((col, c) => (
+            <>
+              <span class="h-4 font-mono text-[0.6rem] leading-none text-fraco" style={`grid-column: ${c + 1}; grid-row: 1`}>
+                {rotulosMes[c]}
+              </span>
+              {col.map((d, l) => (
+                <span
+                  class:list={['size-[11px] rounded-[3px]', classeDia(d.n)]}
+                  style={`grid-column: ${c + 1}; grid-row: ${l + 2}`}
+                  title={dica(d.dia, d.n)}
+                />
+              ))}
+            </>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <div class="mt-14 grid gap-14 md:grid-cols-2">
+    <section aria-labelledby="tipos">
+      <h2 id="tipos" class="titulo-marca text-2xl">Por tipo</h2>
+      <ul class="mt-5 space-y-3">
+        {
+          porTipo.map((t) => (
+            <li class="grid grid-cols-[7.5rem_1fr_2rem] items-center gap-3">
+              <span class:list={['selo justify-self-start', COR_TIPO[t.tipo]]}>{ROTULO_TIPO[t.tipo]}</span>
+              <span class="h-1.5 overflow-hidden rounded-full bg-white/[0.05]" aria-hidden="true">
+                <span class="block h-full rounded-full bg-gradient-to-r from-azul to-azul-claro" style={`width: ${(t.n / maiorTipo) * 100}%`} />
+              </span>
+              <span class="text-right font-mono text-sm text-titulo">{t.n}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <h2 class="titulo-marca mt-12 text-2xl">Biblioteca</h2>
+      <p class="mt-3 text-texto">
+        <strong class="text-titulo">{leitura.lido}</strong> lidos · <strong class="text-titulo">{leitura.lendo}</strong> na mesa
+        · <strong class="text-titulo">{leitura.quero}</strong> na fila — <a href="/biblioteca/" class="text-azul-claro hover:underline">ver</a>
+      </p>
+    </section>
+
+    <section aria-labelledby="trilhas-progresso">
+      <h2 id="trilhas-progresso" class="titulo-marca text-2xl">Trilhas</h2>
+      <ul class="mt-5 space-y-5">
+        {
+          trilhas.map((t) => (
+            <li>
+              <a href={`/trilhas/${t.id}/`} class="text-sm font-medium text-titulo hover:text-azul-claro">
+                {t.data.nome}
+              </a>
+              <div class="mt-2">
+                <BarraTrilha trilha={t} />
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</Base>

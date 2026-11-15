@@ -1,0 +1,586 @@
+@import 'tailwindcss';
+
+/* O bloco @theme é o mesmo do zeno.net.br e do zeno.dev.br (cores e
+   fontes): os três domínios compartilham só isto. */
+@theme {
+  /* ---- Superfícies ---------------------------------------------- */
+  --color-fundo: #05070d;
+  --color-fundo-2: #080b14;
+  --color-vidro: #0c111c;
+  --color-vidro-2: #111827;
+
+  /* ---- Azul (a luz) --------------------------------------------- */
+  --color-azul-fundo: #0b2a4a;
+  --color-azul: #2f81f7;
+  --color-azul-claro: #58b3ff;
+  --color-ciano: #7df0ff;
+  --color-gelo: #9fd8ff;
+  --color-gelo-claro: #d6f1ff;
+
+  /* ---- Vermelho (avatar) e apoio -------------------------------- */
+  --color-vermelho: #e11d3a;
+  --color-vermelho-claro: #ff6b7a;
+  --color-vermelho-quente: #ffd2d6;
+  --color-branco-luz: #ffffff;
+  --color-branco-frio: #c9d6e8;
+  --color-verde: #4ade80;
+  --color-ambar: #fbbf24;
+
+  /* ---- Texto ----------------------------------------------------
+     Sobre #05070d: titulo ~17:1 · texto ~11:1 · suave ~5,4:1.
+     "fraco" (~2,9:1) só em detalhe decorativo, nunca em texto lido. */
+  --color-titulo: #f2f6fb;
+  --color-texto: #c3cede;
+  --color-suave: #8093ab;
+  --color-fraco: #4d5b70;
+
+  /* ---- Tipografia ----------------------------------------------- */
+  --font-marca: 'Chakra Petch', 'Arial Narrow', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --ease-suave: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@property --angulo {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-fundo);
+    color-scheme: dark;
+    /* âncoras (#secao) param abaixo do cabeçalho fixo: no celular ele tem
+       duas linhas (marca + menu), do md para cima só uma */
+    scroll-padding-top: 7.5rem;
+  }
+  @media (min-width: 48rem) {
+    html {
+      scroll-padding-top: 5.5rem;
+    }
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-texto);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-azul) 45%, transparent);
+    color: var(--color-titulo);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-azul-claro);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-azul-fundo) transparent;
+  }
+}
+
+@layer components {
+  /* ---- A moldura de luz (igual ao zeno.net.br) ------------------ */
+  .moldura-luz {
+    --luz-base: var(--color-azul);
+    --luz: var(--color-azul-claro);
+    --luz-quente: var(--color-ciano);
+    --giro: 7s;
+
+    position: relative;
+    isolation: isolate;
+    padding: 1px;
+    border-radius: 18px;
+    background:
+      conic-gradient(
+        from var(--angulo),
+        transparent 0deg 200deg,
+        color-mix(in oklab, var(--luz-base) 70%, transparent) 265deg,
+        var(--luz) 300deg,
+        var(--luz-quente) 320deg,
+        var(--luz) 336deg,
+        transparent 360deg
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--luz-base) 26%, transparent),
+        color-mix(in oklab, var(--luz-base) 8%, transparent)
+      );
+    animation: girar-luz var(--giro) linear infinite;
+  }
+  .moldura-luz::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: inherit;
+    filter: blur(16px);
+    opacity: 0.45;
+    z-index: -1;
+  }
+  /* Parada até o hover: muitas luzes girando juntas cansam. */
+  .moldura-quieta {
+    animation-play-state: paused;
+  }
+  .moldura-quieta::before {
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-suave);
+  }
+  .group:hover .moldura-quieta,
+  .group:focus-within .moldura-quieta {
+    animation-play-state: running;
+  }
+  .group:hover .moldura-quieta::before,
+  .group:focus-within .moldura-quieta::before {
+    opacity: 0.4;
+  }
+  .luz-vermelha {
+    --luz-base: var(--color-vermelho);
+    --luz: var(--color-vermelho-claro);
+    --luz-quente: var(--color-vermelho-quente);
+  }
+  .luz-gelo {
+    --luz-base: var(--color-azul-claro);
+    --luz: var(--color-gelo);
+    --luz-quente: var(--color-gelo-claro);
+  }
+
+  /* ---- Títulos -------------------------------------------------- */
+  .titulo-marca {
+    font-family: var(--font-marca);
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-titulo);
+    line-height: 1.05;
+  }
+  .neon-azul {
+    color: var(--color-gelo-claro);
+    text-shadow:
+      0 0 6px color-mix(in oklab, var(--color-azul-claro) 80%, transparent),
+      0 0 18px color-mix(in oklab, var(--color-azul) 70%, transparent),
+      0 0 36px color-mix(in oklab, var(--color-azul) 45%, transparent);
+  }
+
+  /* ---- Selos (tipo de post, status) ----------------------------- */
+  .selo {
+    --cor: var(--color-azul-claro);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--cor) 35%, transparent);
+    background: color-mix(in oklab, var(--cor) 10%, transparent);
+    padding: 0.1rem 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    line-height: 1.6;
+    color: var(--cor);
+    white-space: nowrap;
+  }
+  .selo-azul {
+    --cor: var(--color-azul-claro);
+  }
+  .selo-verde {
+    --cor: var(--color-verde);
+  }
+  .selo-gelo {
+    --cor: var(--color-gelo);
+  }
+  .selo-ambar {
+    --cor: var(--color-ambar);
+  }
+  .selo-vermelho {
+    --cor: var(--color-vermelho-claro);
+  }
+  .selo-cinza {
+    --cor: var(--color-suave);
+  }
+
+  /* ---- Fundo ----------------------------------------------------- */
+  .malha {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(70% 60% at 50% 0%, #000 20%, transparent 75%);
+  }
+}
+
+/* ===================================================================
+   Texto dos posts
+   =================================================================== */
+.prosa {
+  color: var(--color-texto);
+  font-size: 1.075rem;
+  line-height: 1.8;
+  overflow-wrap: break-word;
+}
+.prosa > * + * {
+  margin-top: 1.25em;
+}
+.prosa :is(h2, h3, h4) {
+  position: relative;
+  font-family: var(--font-marca);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-titulo);
+  line-height: 1.2;
+}
+.prosa h2 {
+  margin-top: 2.4em;
+  font-size: 1.75rem;
+}
+.prosa h3 {
+  margin-top: 2em;
+  font-size: 1.35rem;
+}
+.prosa h4 {
+  margin-top: 1.8em;
+  font-size: 1.1rem;
+}
+.prosa :is(h2, h3, h4) + * {
+  margin-top: 0.8em;
+}
+/* "#" que aparece ao lado do título (o script do post coloca o link) */
+.prosa .ancora {
+  position: absolute;
+  left: -1.1em;
+  padding-right: 0.3em;
+  color: var(--color-fraco);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.prosa :is(h2, h3, h4):hover .ancora,
+.prosa .ancora:focus-visible {
+  opacity: 1;
+  color: var(--color-azul-claro);
+}
+.prosa a {
+  color: var(--color-azul-claro);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--color-azul-claro) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.prosa a:hover {
+  text-decoration-color: var(--color-azul-claro);
+}
+.prosa strong {
+  color: var(--color-titulo);
+  font-weight: 600;
+}
+.prosa :is(ul, ol) {
+  padding-left: 1.4em;
+}
+.prosa ul {
+  list-style: none;
+}
+.prosa ul > li {
+  position: relative;
+}
+.prosa ul > li::before {
+  content: '';
+  position: absolute;
+  left: -1.05em;
+  top: 0.75em;
+  width: 0.38em;
+  height: 0.38em;
+  rotate: 45deg;
+  background: color-mix(in oklab, var(--color-azul) 75%, transparent);
+}
+.prosa ol {
+  list-style: decimal;
+}
+.prosa ol > li::marker {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--color-azul-claro);
+}
+.prosa li + li {
+  margin-top: 0.45em;
+}
+.prosa li > :is(ul, ol) {
+  margin-top: 0.45em;
+}
+/* Lista de tarefas do GFM: - [ ] e - [x] */
+.prosa li:has(> input[type='checkbox'])::before {
+  display: none;
+}
+.prosa li > input[type='checkbox'] {
+  margin-right: 0.5em;
+  accent-color: var(--color-azul);
+}
+.prosa blockquote {
+  border-left: 2px solid var(--color-azul);
+  padding: 0.2em 0 0.2em 1.1em;
+  color: var(--color-branco-frio);
+  font-style: italic;
+}
+.prosa hr {
+  margin: 3em auto;
+  width: 30%;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.prosa img {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.prosa :not(pre) > code {
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-vidro-2);
+  padding: 0.12em 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--color-gelo-claro);
+}
+.prosa kbd {
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom-width: 2px;
+  padding: 0.05em 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  color: var(--color-titulo);
+}
+.prosa table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.93em;
+}
+.prosa :is(th, td) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.55em 0.9em 0.55em 0;
+  text-align: left;
+  vertical-align: top;
+}
+.prosa th {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--color-suave);
+}
+
+/* ---- Blocos de código (Shiki) ------------------------------------- */
+.prosa pre {
+  position: relative;
+  margin-top: 1.6em;
+  margin-bottom: 1.6em;
+  border-radius: 14px;
+  border: 1px solid rgba(88, 179, 255, 0.18);
+  background-color: #0a0f1a !important;
+  padding: 1.15em 1.2em;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  box-shadow: 0 20px 50px -30px rgba(47, 129, 247, 0.45);
+}
+.prosa pre code {
+  font-family: inherit;
+}
+.prosa pre[data-language]::after {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.55em;
+  right: 0.9em;
+  font-size: 0.68rem;
+  color: var(--color-fraco);
+  text-transform: lowercase;
+  pointer-events: none;
+}
+.prosa pre:has(.copiar)::after {
+  display: none;
+}
+.prosa .copiar {
+  position: absolute;
+  top: 0.5em;
+  right: 0.55em;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-vidro);
+  padding: 0.15em 0.55em;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-suave);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+.prosa pre:hover .copiar,
+.prosa .copiar:focus-visible {
+  opacity: 1;
+}
+.prosa .copiar:hover {
+  color: var(--color-titulo);
+  border-color: color-mix(in oklab, var(--color-azul-claro) 50%, transparent);
+}
+.prosa .copiar[data-ok] {
+  color: var(--color-verde);
+}
+@media (hover: none) {
+  .prosa .copiar {
+    opacity: 1;
+  }
+}
+
+/* ---- Avisos: > [!NOTA] / [!DICA] / [!IMPORTANTE] / [!CUIDADO] ------ */
+.prosa .aviso {
+  --cor: var(--color-azul-claro);
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--cor) 30%, transparent);
+  border-left-width: 3px;
+  background: color-mix(in oklab, var(--cor) 6%, transparent);
+  padding: 0.9em 1.15em;
+  font-size: 0.97em;
+}
+.prosa .aviso::before {
+  content: attr(data-rotulo);
+  display: block;
+  margin-bottom: 0.3em;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cor);
+}
+.prosa .aviso > * + * {
+  margin-top: 0.7em;
+}
+.prosa .aviso-dica {
+  --cor: var(--color-verde);
+}
+.prosa .aviso-importante {
+  --cor: var(--color-gelo);
+}
+.prosa .aviso-cuidado {
+  --cor: var(--color-ambar);
+}
+
+/* ===================================================================
+   Transição entre páginas (View Transitions entre documentos)
+   Chrome, Edge e Safari 18+; nos outros a navegação é normal.
+   =================================================================== */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: 0.22s var(--ease-suave) both sair-pagina;
+}
+::view-transition-new(root) {
+  animation: 0.38s var(--ease-suave) both entrar-pagina;
+}
+::view-transition-group(*) {
+  animation-duration: 0.42s;
+  animation-timing-function: var(--ease-suave);
+}
+
+/* Barra de leitura: anda com a rolagem, sem JavaScript. */
+.barra-leitura {
+  display: none;
+}
+@supports (animation-timeline: scroll()) {
+  .barra-leitura {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 60;
+    height: 2px;
+    transform-origin: left;
+    background: linear-gradient(90deg, var(--color-azul), var(--color-azul-claro), var(--color-ciano));
+    animation: ler linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+/* ---- Busca (Pagefind UI no tema do site) --------------------------- */
+#busca {
+  --pagefind-ui-scale: 0.92;
+  --pagefind-ui-primary: var(--color-azul-claro);
+  --pagefind-ui-text: var(--color-texto);
+  --pagefind-ui-background: var(--color-vidro);
+  --pagefind-ui-border: rgba(255, 255, 255, 0.12);
+  --pagefind-ui-tag: var(--color-vidro-2);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 14px;
+  --pagefind-ui-image-border-radius: 10px;
+  --pagefind-ui-font: var(--font-sans);
+}
+#busca mark {
+  background: color-mix(in oklab, var(--color-azul) 35%, transparent);
+  color: var(--color-titulo);
+  border-radius: 3px;
+}
+
+/* ===================================================================
+   Animações
+   =================================================================== */
+@keyframes girar-luz {
+  to {
+    --angulo: 360deg;
+  }
+}
+@keyframes sair-pagina {
+  to {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes entrar-pagina {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+  }
+}
+@keyframes ler {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.entrada {
+  animation: subir 0.7s var(--ease-suave) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .moldura-luz {
+    animation: none;
+  }
+}

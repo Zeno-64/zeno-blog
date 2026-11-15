@@ -1,0 +1,38 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content'
+import Cabecalho from '../../components/Cabecalho.astro'
+import ItemPost from '../../components/ItemPost.astro'
+import Base from '../../layouts/Base.astro'
+import { postsVisiveis } from '../../lib/posts'
+
+export async function getStaticPaths() {
+  const series = await getCollection('series')
+  return series.map((serie) => ({ params: { id: serie.id }, props: { serie } }))
+}
+
+interface Props {
+  serie: CollectionEntry<'series'>
+}
+const { serie } = Astro.props
+const partes = (await postsVisiveis((p) => p.data.serie?.id === serie.id)).sort(
+  (a, b) => (a.data.parte ?? 0) - (b.data.parte ?? 0),
+)
+---
+
+<Base titulo={`Série: ${serie.data.nome}`} descricao={serie.data.descricao}>
+  <Cabecalho comando={`ls ~/series/${serie.id}`} titulo={serie.data.nome} descricao={serie.data.descricao} />
+
+  {
+    partes.length > 0 ? (
+      <ol class="grid gap-4">
+        {partes.map((p, i) => (
+          <ItemPost post={p} i={i} />
+        ))}
+      </ol>
+    ) : (
+      <p class="text-suave">A primeira parte ainda não saiu.</p>
+    )
+  }
+
+  <p class="mt-14"><a href="/series/" class="font-mono text-sm text-azul-claro hover:underline">← todas as séries</a></p>
+</Base>

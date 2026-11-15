@@ -1,0 +1,68 @@
+# Na fila — ideias de post. Aparecem em /ideias/.
+#
+# tipo:       artigo | til | nota | devlog | leitura
+# prioridade: alta | media | baixa
+# Para começar uma:  npm run novo -- "Título" --tipo til
+# Depois de publicar, apague a ideia daqui.
+
+- id: og-com-chrome
+  titulo: Imagens de prévia de link geradas com o Chrome que já está instalado
+  tipo: til
+  trilha: web
+  prioridade: alta
+  notas: puppeteer-core + setContent + document.fonts.ready — e por que esperar "rede ociosa" trava quando a página usa Google Fonts.
+
+- id: zapflow-sem-build
+  titulo: Extensão do Chrome sem etapa de build — e como o ZapFlow é testado
+  tipo: devlog
+  prioridade: alta
+  notas: Content scripts rodando em vm.createContext no Node, com um "WhatsApp falso" local.
+
+- id: dns-cache
+  titulo: Domínio novo não abre só para você? É cache de DNS
+  tipo: til
+  trilha: web
+  prioridade: alta
+  notas: ipconfig /flushdns no Windows e chrome://net-internals/#dns no Chrome. Testar no celular, em rede móvel, tira a dúvida.
+
+- id: precificar-site
+  titulo: Quanto cobrar por um site de negócio pequeno
+  tipo: artigo
+  prioridade: media
+  notas: Domínio custa ~R$ 40/ano e a hospedagem é grátis — o preço é tempo, conteúdo e manutenção.
+
+- id: seo-local
+  titulo: SEO local — por que o Perfil da Empresa no Google vale mais que o site
+  tipo: artigo
+  trilha: web
+  prioridade: media
+  notas: Candidato a parte 3 de "Do zero ao ar".
+
+- id: rls-dois-perfis
+  titulo: Row Level Security com dois perfis — nutricionista e paciente
+  tipo: artigo
+  trilha: mobile
+  prioridade: media
+
+- id: certificacao-aws
+  titulo: Certificação AWS vence em três anos — o plano para renovar
+  tipo: nota
+  trilha: aws
+  prioridade: media
+
+- id: testcontainers
+  titulo: Testes de integração com Testcontainers no Spring Boot
+  tipo: nota
+  trilha: java-spring
+  prioridade: baixa
+
+- id: security-insights
+  titulo: Os alertas do Security Insights do Cloudflare não são invasão
+  tipo: til
+  prioridade: baixa
+
+- id: ddia-parte-1
+  titulo: Lendo DDIA — confiabilidade, escalabilidade e manutenção
+  tipo: leitura
+  trilha: fundamentos
+  prioridade: baixa

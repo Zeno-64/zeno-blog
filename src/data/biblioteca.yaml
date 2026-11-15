@@ -1,0 +1,58 @@
+# Biblioteca — livros, cursos, documentação, vídeos e artigos.
+#
+# tipo:   livro | curso | documentacao | video | artigo
+# status: quero | lendo | lido | parei
+# trilha: id de src/data/trilhas.yaml (opcional)
+# nota:   uma frase sua sobre o item (opcional — fica ótimo nos lidos)
+
+- id: docs-astro
+  titulo: Documentação do Astro
+  tipo: documentacao
+  status: lendo
+  url: https://docs.astro.build/
+  trilha: web
+  nota: Coleções de conteúdo, rotas estáticas e feeds — o que este blog usa.
+
+- id: docs-expo
+  titulo: Documentação do Expo
+  tipo: documentacao
+  status: lendo
+  url: https://docs.expo.dev/
+  trilha: mobile
+
+- id: ddia
+  titulo: Designing Data-Intensive Applications
+  autor: Martin Kleppmann
+  tipo: livro
+  status: quero
+  url: https://dataintensive.net/
+  trilha: fundamentos
+
+- id: effective-java
+  titulo: Effective Java (3ª edição)
+  autor: Joshua Bloch
+  tipo: livro
+  status: quero
+  trilha: java-spring
+
+- id: well-architected
+  titulo: AWS Well-Architected Framework
+  tipo: documentacao
+  status: quero
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
+  trilha: aws
+
+- id: refactoring-ui
+  titulo: Refactoring UI
+  autor: Adam Wathan e Steve Schoger
+  tipo: livro
+  status: quero
+  url: https://www.refactoringui.com/
+  trilha: web
+
+- id: wcag
+  titulo: WCAG 2.2 — Diretrizes de Acessibilidade para Conteúdo Web
+  tipo: documentacao
+  status: quero
+  url: https://www.w3.org/TR/WCAG22/
+  trilha: web

@@ -1,0 +1,211 @@
+---
+import { getCollection } from 'astro:content'
+import Cabecalho from '../components/Cabecalho.astro'
+import Janela from '../components/Janela.astro'
+import Base from '../layouts/Base.astro'
+import { cartoesDeRevisao } from '../lib/revisao'
+
+const cartoes = await cartoesDeRevisao()
+const trilhas = (await getCollection('trilhas')).filter((t) => cartoes.some((c) => c.trilha === t.id))
+// JSON dentro de <script>: "<" escapado para nenhum texto fechar a tag
+const dados = JSON.stringify(cartoes).replace(/</g, '\\u003c')
+---
+
+<Base titulo="Revisão" descricao="Repetição espaçada com as perguntas dos posts do caderno de estudos do Zeno.">
+  <Cabecalho
+    comando="./revisar --hoje"
+    titulo="Revisão"
+    descricao="As perguntas do fim de cada post, em repetição espaçada: o que você acerta volta cada vez mais tarde; o que erra, repete no fim da rodada e volta amanhã. Lembrar puxando da memória fixa muito mais que reler."
+  />
+
+  {
+    cartoes.length === 0 ? (
+      <p class="text-suave">Nenhum post com perguntas de revisão ainda.</p>
+    ) : (
+      <div class="grid gap-10 lg:grid-cols-[1fr_17rem]">
+        <div>
+          <Janela titulo="cartao.txt" direita="espaço: mostrar · 1: errei · 2: acertei">
+            <div class="min-h-[18rem] p-6 outline-none md:p-8" id="area" aria-live="polite" tabindex="-1">
+              <p class="text-suave">Carregando os cartões…</p>
+            </div>
+          </Janela>
+          <noscript>
+            <p class="mt-4 text-sm text-suave">A revisão precisa de JavaScript. As perguntas também estão no fim de cada post.</p>
+          </noscript>
+        </div>
+
+        <aside class="space-y-8">
+          <div>
+            <label for="trilha" class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-fraco">
+              trilha
+            </label>
+            <select
+              id="trilha"
+              class="mt-2 w-full rounded-xl border border-white/10 bg-vidro px-3 py-2 text-sm text-titulo focus:border-azul-claro/60 focus:outline-none"
+            >
+              <option value="">Todas</option>
+              {trilhas.map((t) => (
+                <option value={t.id}>{t.data.nome}</option>
+              ))}
+            </select>
+          </div>
+          <dl class="grid grid-cols-2 gap-3 text-center">
+            <div class="rounded-xl border border-white/[0.07] bg-vidro/50 px-3 py-3">
+              <dt class="font-mono text-[0.65rem] text-suave">para hoje</dt>
+              <dd class="mt-1 font-marca text-2xl font-bold italic text-titulo" id="n-hoje">–</dd>
+            </div>
+            <div class="rounded-xl border border-white/[0.07] bg-vidro/50 px-3 py-3">
+              <dt class="font-mono text-[0.65rem] text-suave">no total</dt>
+              <dd class="mt-1 font-marca text-2xl font-bold italic text-titulo" id="n-total">{cartoes.length}</dd>
+            </div>
+          </dl>
+          <div class="space-y-3 text-sm">
+            <a href="/revisao.csv" class="block text-azul-claro hover:underline" download>Baixar para o Anki (CSV)</a>
+            <button type="button" id="zerar" class="text-suave hover:text-vermelho-claro">Zerar meu progresso</button>
+          </div>
+          <p class="text-xs leading-relaxed text-fraco">
+            O progresso fica salvo só neste navegador. Intervalos: 1, 3, 7, 15 e 30 dias.
+          </p>
+        </aside>
+      </div>
+    )
+  }
+
+  <script is:inline type="application/json" id="cartoes" set:html={dados} />
+</Base>
+
+<script>
+  type Cartao = { id: string; pergunta: string; resposta: string; titulo: string; url: string; trilha?: string }
+  type Estado = Record<string, { caixa: number; proxima: string }>
+
+  const CHAVE = 'zeno-revisao-v1'
+  const INTERVALOS = [0, 1, 3, 7, 15, 30] // dias por caixa (Leitner)
+
+  const fonte = document.getElementById('cartoes')
+  const area = document.getElementById('area')
+  if (fonte && area) {
+    const todos: Cartao[] = JSON.parse(fonte.textContent || '[]')
+    const filtro = document.getElementById('trilha') as HTMLSelectElement
+    const nHoje = document.getElementById('n-hoje')!
+    const nTotal = document.getElementById('n-total')!
+
+    const hoje = () => new Date().toLocaleDateString('sv') // AAAA-MM-DD no fuso local
+    const daquiA = (dias: number) => {
+      const d = new Date()
+      d.setDate(d.getDate() + dias)
+      return d.toLocaleDateString('sv')
+    }
+
+    // localStorage pode faltar (janela anônima, bloqueio): tudo segue funcionando, só não lembra
+    function ler(): Estado {
+      try {
+        return JSON.parse(localStorage.getItem(CHAVE) || '{}')
+      } catch {
+        return {}
+      }
+    }
+    function gravar(e: Estado) {
+      try {
+        localStorage.setItem(CHAVE, JSON.stringify(e))
+      } catch {
+        /* sem armazenamento: a sessão continua */
+      }
+    }
+
+    let estado = ler()
+    let fila: Cartao[] = []
+    let revelado = false
+    const erradosNaRodada = new Set<string>()
+
+    const daTrilha = () => todos.filter((c) => !filtro.value || c.trilha === filtro.value)
+    const vence = (c: Cartao) => !estado[c.id] || estado[c.id].proxima <= hoje()
+
+    function montarFila(tudo = false) {
+      fila = daTrilha().filter((c) => tudo || vence(c))
+      // embaralha para não decorar a ordem
+      for (let i = fila.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[fila[i], fila[j]] = [fila[j], fila[i]]
+      }
+      revelado = false
+      desenhar()
+    }
+
+    const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+    function desenhar() {
+      nHoje.textContent = String(fila.length)
+      nTotal.textContent = String(daTrilha().length)
+      const c = fila[0]
+      if (!c) {
+        area!.innerHTML = `
+          <p class="font-marca text-2xl font-bold italic text-titulo">Nada para hoje.</p>
+          <p class="mt-2 text-texto">O que você acertou volta nos próximos dias. Se quiser treinar mesmo assim:</p>
+          <button type="button" data-acao="tudo" class="mt-6 rounded-full border border-white/15 px-5 py-2 text-sm text-titulo transition hover:border-azul-claro/50">Revisar tudo agora</button>`
+        return
+      }
+      const caixa = estado[c.id]?.caixa ?? 0
+      area!.innerHTML = `
+        <p class="font-mono text-xs text-suave">caixa ${caixa} · <a href="${c.url}" class="text-azul-claro hover:underline">${esc(c.titulo)}</a></p>
+        <p class="mt-4 font-marca text-[1.6rem] font-bold italic leading-snug text-titulo">${esc(c.pergunta)}</p>
+        ${
+          revelado
+            ? `<div class="mt-6 border-t border-white/[0.07] pt-5 text-lg leading-relaxed text-texto">${esc(c.resposta)}</div>
+               <div class="mt-8 flex flex-wrap gap-3">
+                 <button type="button" data-acao="errei" class="rounded-full border border-vermelho-claro/40 px-5 py-2 text-sm text-vermelho-claro transition hover:bg-vermelho/10">Errei <kbd class="ml-1 opacity-60">1</kbd></button>
+                 <button type="button" data-acao="acertei" class="rounded-full bg-azul px-5 py-2 text-sm font-medium text-white transition hover:bg-[#3d8dfa]">Acertei <kbd class="ml-1 opacity-70">2</kbd></button>
+               </div>`
+            : `<button type="button" data-acao="mostrar" class="mt-8 rounded-full border border-white/15 px-5 py-2 text-sm text-titulo transition hover:border-azul-claro/50">Mostrar resposta <kbd class="ml-1 opacity-60">espaço</kbd></button>`
+        }`
+      // Com a resposta aberta o foco fica no cartão, não no "Errei": assim o
+      // keyup do espaço que abriu a resposta não aperta botão nenhum.
+      if (revelado) area!.focus({ preventScroll: true })
+      else area!.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true })
+    }
+
+    function responder(acertou: boolean) {
+      const c = fila.shift()
+      if (!c) return
+      // Errou agora ou antes nesta rodada: volta para a caixa 1 (amanhã).
+      // Acertar na repetição não promove — senão errar valeria um salto.
+      const errouAntes = erradosNaRodada.has(c.id)
+      const caixa = acertou && !errouAntes ? Math.min((estado[c.id]?.caixa ?? 0) + 1, INTERVALOS.length - 1) : 1
+      estado[c.id] = { caixa, proxima: daquiA(INTERVALOS[caixa]) }
+      gravar(estado)
+      if (!acertou) {
+        erradosNaRodada.add(c.id)
+        fila.push(c) // pergunta de novo no fim desta rodada
+      }
+      revelado = false
+      desenhar()
+    }
+
+    area.addEventListener('click', (e) => {
+      const acao = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-acao]')?.dataset.acao
+      if (acao === 'mostrar') {
+        revelado = true
+        desenhar()
+      } else if (acao === 'errei' || acao === 'acertei') responder(acao === 'acertei')
+      else if (acao === 'tudo') montarFila(true)
+    })
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.target as HTMLElement).closest('select, input, textarea') || !fila[0]) return
+      if (e.key === ' ' && !revelado) {
+        e.preventDefault()
+        revelado = true
+        desenhar()
+      } else if (revelado && (e.key === '1' || e.key === '2')) responder(e.key === '2')
+    })
+
+    filtro.addEventListener('change', () => montarFila())
+    document.getElementById('zerar')?.addEventListener('click', () => {
+      if (!confirm('Zerar o progresso da revisão neste navegador?')) return
+      estado = {}
+      gravar(estado)
+      montarFila()
+    })
+
+    montarFila()
+  }
+</script>

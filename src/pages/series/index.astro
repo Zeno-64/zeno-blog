@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content'
+import Cabecalho from '../../components/Cabecalho.astro'
+import Base from '../../layouts/Base.astro'
+import { postsVisiveis, urlPost } from '../../lib/posts'
+
+const series = await getCollection('series')
+const posts = await postsVisiveis((p) => !!p.data.serie)
+const partes = (id: string) =>
+  posts.filter((p) => p.data.serie?.id === id).sort((a, b) => (a.data.parte ?? 0) - (b.data.parte ?? 0))
+---
+
+<Base titulo="Séries" descricao="Posts em sequência sobre um mesmo assunto, para ler em ordem.">
+  <Cabecalho comando="ls ~/series" titulo="Séries" descricao="Assuntos grandes demais para um post só. Leia na ordem." />
+
+  <ul class="grid gap-5 md:grid-cols-2">
+    {
+      series.map((s, i) => (
+        <li class="entrada" style={`--i: ${i}`}>
+          <article class="h-full rounded-2xl border border-white/[0.06] bg-vidro/40 p-6">
+            <h2 class="titulo-marca text-2xl">
+              <a href={`/series/${s.id}/`} class="hover:text-gelo-claro">
+                {s.data.nome}
+              </a>
+            </h2>
+            <p class="mt-2 leading-relaxed text-texto">{s.data.descricao}</p>
+            {partes(s.id).length > 0 ? (
+              <ol class="mt-5 space-y-1.5 text-sm">
+                {partes(s.id).map((p, n) => (
+                  <li class="flex gap-3">
+                    <span class="w-5 shrink-0 font-mono text-xs leading-6 text-fraco">{n + 1}.</span>
+                    <a href={urlPost(p)} class="text-texto hover:text-azul-claro">
+                      {p.data.titulo}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p class="mt-5 font-mono text-xs text-fraco">primeira parte em breve</p>
+            )}
+          </article>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

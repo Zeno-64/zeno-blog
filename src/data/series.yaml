@@ -1,0 +1,9 @@
+# Séries: posts em sequência. No post, use `serie: <id>` e `parte: 1, 2, 3…`.
+
+- id: do-zero-ao-ar
+  nome: Do zero ao ar
+  descricao: O caminho completo de um site para negócio pequeno — domínio, hospedagem sem mensalidade, prévia de link, SEO local e WhatsApp.
+
+- id: offline-primeiro
+  nome: Offline primeiro
+  descricao: Apps que funcionam sem internet e sincronizam quando ela volta — SQLite no aparelho, Supabase na nuvem.
